@@ -1,0 +1,32 @@
+{
+  "name": "fullstackprogramming",
+  "version": "1.0.0",
+  "description": "fsp_project_campus_bus",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Brian0KIM/fullStackProgramming.git"
+  },
+  "keywords": [
+    "bus",
+    "campus",
+    "fullstack",
+    "flutter",
+    "node"
+  ],
+  "author": "SEONGMIN KIM",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Brian0KIM/fullStackProgramming/issues"
+  },
+  "homepage": "https://github.com/Brian0KIM/fullStackProgramming#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.1",
+    "luxon": "^3.5.0",
+    "request": "^2.88.2"
+  }
+}
