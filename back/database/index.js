@@ -1,3 +1,33 @@
+const session=[];
+const setSession = function(id,cookie) { 
+    //중복 로그인시 최근 로그인 정보를 덮어씀
+    const sessionAvaliable = session.find(user => user.id === id);
+    if (!sessionAvaliable) {
+    session.push({
+        id: id,
+        Cookie: cookie,
+        reserveReserve: []
+    });}
+    else {
+        sessionAvaliable.Cookie = cookie;
+    }
+}
+const setSession2 = function(id, cookie) {
+    const sessionAvaliable = session.find(user => user.id === id);
+    if (sessionAvaliable) {
+        sessionAvaliable.Cookie2 = cookie
+    }
+}
+
+const getSession = function(id) {
+    return session.find(user => user.id == id)['Cookie'];
+}
+const getSession2 = function(id) {
+    return session.find(user => user.id == id)['Cookie2'];
+}
+const getSession3= function(id) {
+    return session.find(user => user.id == id)['reserveReserve'];
+}
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
 const request = require('request')
@@ -105,3 +135,6 @@ function getUserInfo(cookie, callback, ecallback) {
         callback(JSON.parse(body))
     })
 }
+module.exports = {
+    login,getMID, setSession, getSession, setSession2, getSession2, getUserInfo, getSession3
+};

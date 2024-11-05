@@ -27,6 +27,8 @@
     "cors": "^2.8.5",
     "express": "^4.21.1",
     "luxon": "^3.5.0",
-    "request": "^2.88.2"
+    "node-jsencrypt": "^1.0.0",
+    "request": "^2.88.2",
+    "xml2js": "^0.6.2"
   }
 }
