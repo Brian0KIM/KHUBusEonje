@@ -7,7 +7,7 @@ const { DateTime } = require('luxon');
 
 const bodyParser = require('body-parser')
 app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({extended: true}))        //extended: true -> qs라이브러리로 중첩 허용, 중첩을 허용해야하나? 아니지 않나
+app.use(bodyParser.urlencoded({extended: true}))  
 
 
 const PORT = 8080
@@ -33,7 +33,7 @@ app.post('/user/login', (req, res) => {
     database.login(id, pw, (data, cookie) => {
         database.setSession(data.id, cookie)
 
-        // libseat login
+        //  login
         request.post({
             url: 'https://libseat.khu.ac.kr/login_library',
             followAllRedirects: false,
@@ -71,4 +71,21 @@ app.post('/user/login', (req, res) => {
         })
     })
     
+})
+
+app.post('/user/logout', (req, res) => {
+    const id = req.body.id
+    const cookie = req.body.cookie
+
+    database.logout(id, cookie, (data) => {
+        res.json({
+            ok: true
+        })
+    },
+    (err) => {
+        res.status(400).json({
+            ok: false,
+            err: err
+        })
+    })
 })
