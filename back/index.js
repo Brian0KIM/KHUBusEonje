@@ -151,3 +151,20 @@ app.get('/bus/:routeId/eta', (req, res) => {
     );
 });
 
+
+app.get('/stop/:path/:stationId/eta', (req, res) => {
+    const stationId = req.params.stationId;
+    const path = req.params.path;  // 경로 구분용 (international/seoul 등)
+    
+    database.getBusArrival(stationId, 
+        (data) => {
+            res.json(data);
+        },
+        (error) => {
+            res.status(400).json({
+                ok: false,
+                error: error
+            });
+        }
+    );
+});
