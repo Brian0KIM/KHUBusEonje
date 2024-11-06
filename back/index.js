@@ -32,7 +32,7 @@ app.post('/user/login', (req, res) => {
     const pw = req.body.pw                //로그인시 비밀번호
 
     database.login(id, pw, (data, cookie) => {
-        database.setSession(data.id, cookie)
+        database.setSession(data.id, data.name, cookie)
 
         //  login
         request.post({
@@ -90,100 +90,64 @@ app.post('/user/logout', (req, res) => {
         })
     })
 })
-app.post('/user/status', (req, res) => {                 // 유저 정보 확인
-    const id = req.body.id
-    if (!id) {
-        res.json({
+app.get('/user/status', (req, res) => {
+    const id = req.query.id;  // id는 쿼리로 받고
+    const cookie = req.headers.authorization;  // 쿠키는 헤더로 받음
+    
+    if (!id || !cookie) {
+        res.status(400).json({
             ok: false,
-            err: 'id is required'
-        })
-        return
+            error: '필수 정보가 누락되었습니다'
+        });
+        return;
     }
 
-    const sessionRecv = req.body.session
-    const session = database.getSession(id)
-
-    if (!session || !CheckSession(sessionRecv, session)) {
+    // 전체 세션 정보 조회
+    const userSession = database.getUserSession(id);
+    if (!userSession) {
         res.status(401).json({
             ok: false,
-            err: 'incorrect Session'
-        })
-        return
+            error: '로그인 정보를 찾을 수 없습니다'
+        });
+        return;
     }
 
-    const data = database.getSeatById(id)
-    if(data.length !== 0) {    
-        res.json({
-            ok: true,
-            ismy: true,
-            data: data[0]
-        })
-        return
-    }
-
-    database.getUserInfo(database.getSession2(id), (data) => {
-        res.json({
-            ok: true,
-            data: data
-        })
-    }, (err) => {
-        res.status(404).json({
+    // 쿠키 검증
+    if (!CheckSession(cookie, userSession.Cookie)) {
+        res.status(401).json({
             ok: false,
-            err: err
-        })
-    })
-})
+            error: '유효하지 않은 세션입니다'
+        });
+        return;
+    }
+
+    res.json({
+        ok: true,
+        data: {
+            id: id,
+            name: userSession.name,
+            isLoggedIn: true,
+            sessionValid: true
+        }
+    });
+});
 
 
 
-app.get('/busInfo', (req, res) => {
-    const routeId = req.query.routeId || '233000031';
-    const url = 'http://apis.data.go.kr/6410000/buslocationservice/getBusLocationList';
-    const serviceKey = 'YijIcFf7g0uISm%2BdQdDk5pw7WfFbMyqPPo9So6Jyxck0kr1YMHzTPR52qiBspoKxwxho0fOwe%2FTk%2FvBw%2B0ynuQ%3D%3D';
-    const queryParams = '?' + encodeURIComponent('serviceKey') + '=' + serviceKey
-        + '&' + encodeURIComponent('routeId') + '=' + encodeURIComponent(routeId);
 
-    request({
-        url: url + queryParams,
-        method: 'GET'
-    }, function (error, response, body) {
-        if (error) {
-            console.error('Request error:', error);
+app.get('/bus/:routeId/eta', (req, res) => {
+    const routeId = req.params.routeId || '233000031';  // busId -> routeId로 수정
+    
+    database.mybusinfo(routeId, 
+        (data) => {
+            res.json(data);
+        },
+        (error) => {
             res.status(400).json({
                 ok: false,
                 error: error
             });
-            return;
         }
-        
-        // XML을 JSON으로 변환
-        parser.parseString(body, (err, result) => {
-            if (err) {
-                console.error('XML Parse error:', err);
-                res.status(400).json({
-                    ok: false,
-                    error: 'XML 파싱 오류'
-                });
-                return;
-            }
-
-            try {
-                // XML 응답 구조에 따라 필요한 데이터 추출
-                const busLocationList = result.response.msgBody.busLocationList;
-                
-                res.json({
-                    ok: true,
-                    data: busLocationList
-                });
-            } catch (e) {
-                console.error('Data processing error:', e);
-                res.status(400).json({
-                    ok: false,
-                    error: '데이터 처리 오류',
-                    rawData: result // 디버깅용 전체 데이터
-                });
-            }
-        });
-    });
+    );
 });
 
