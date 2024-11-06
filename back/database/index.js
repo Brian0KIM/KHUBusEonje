@@ -1,3 +1,7 @@
+const bus={
+    
+};
+const xml2js2 = require('xml2js');
 const session=[];
 const setSession = function(id,cookie) { 
     //중복 로그인시 최근 로그인 정보를 덮어씀
@@ -135,6 +139,9 @@ function getUserInfo(cookie, callback, ecallback) {
         callback(JSON.parse(body))
     })
 }
+
+
+
 module.exports = {
-    login,getMID, setSession, getSession, setSession2, getSession2, getUserInfo, getSession3
+    login,getMID, setSession, getSession, setSession2, getSession2, getUserInfo, getSession3, mybusinfo, getCachedBusInfo
 };

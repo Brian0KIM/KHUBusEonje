@@ -1,6 +1,5 @@
 const express = require('express')
 const app = express()
-
 const cors = require('cors');                           //서버간 통신 모듈
 app.use(cors())
 const { DateTime } = require('luxon');
@@ -91,6 +90,51 @@ app.post('/user/logout', (req, res) => {
         })
     })
 })
+app.post('/user/status', (req, res) => {                 // 유저 정보 확인
+    const id = req.body.id
+    if (!id) {
+        res.json({
+            ok: false,
+            err: 'id is required'
+        })
+        return
+    }
+
+    const sessionRecv = req.body.session
+    const session = database.getSession(id)
+
+    if (!session || !CheckSession(sessionRecv, session)) {
+        res.status(401).json({
+            ok: false,
+            err: 'incorrect Session'
+        })
+        return
+    }
+
+    const data = database.getSeatById(id)
+    if(data.length !== 0) {    
+        res.json({
+            ok: true,
+            ismy: true,
+            data: data[0]
+        })
+        return
+    }
+
+    database.getUserInfo(database.getSession2(id), (data) => {
+        res.json({
+            ok: true,
+            data: data
+        })
+    }, (err) => {
+        res.status(404).json({
+            ok: false,
+            err: err
+        })
+    })
+})
+
+
 
 app.get('/busInfo', (req, res) => {
     const routeId = req.query.routeId || '233000031';
