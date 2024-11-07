@@ -1,4 +1,6 @@
-require('dotenv').config();
+const fs = require('fs');
+const path = require('path');
+require('dotenv').config();//환경변수 설정
 const serviceKey = process.env.API_KEY;
 const xml2js2 = require('xml2js');
 const session=[];
@@ -85,7 +87,9 @@ const specialRouteMapping = {
     }
     // 필요한 매핑 추가 가능
 };
-
+const busStationData = JSON.parse(
+    fs.readFileSync(path.join(__dirname, '버스정류소현황.json'), 'utf8')
+);
 const setSession = function(id, name, cookie) { 
     const sessionAvaliable = session.find(user => user.id === id);
     if (!sessionAvaliable) {
@@ -260,6 +264,7 @@ function mybusinfo(routeId, callback, ecallback) {
                             routeId: bus.routeId,
                             routeName: busRouteMap[bus.routeId] || bus.routeName,
                             stationId: bus.stationId,
+                            stationName: findStationName(bus.stationId),
                             stationSeq: bus.stationSeq,
                             endBus: bus.endBus,
                             lowPlate: bus.lowPlate,
@@ -497,8 +502,18 @@ function getBusArrival2(stationId, callback, ecallback) {
     });
 }
 
+function findStationName(stationId) {
+    // 먼저 stationMap에서 찾기
+    if (stationMap[stationId]) {
+        return stationMap[stationId];
+    }
+    
+    // stationMap에 없으면 JSON 파일에서 찾기
+    const station = busStationData.find(station => station.STTN_ID === stationId);
+    return station ? station.STTN_NM_INFO : '알 수 없는 정류장';
+}
 
-function getBusName(routeId, callback, ecallback) {
+/*function getBusName(routeId, callback, ecallback) {
     const routeName = busRouteMap[routeId];
     if (routeName) {
         callback({
@@ -509,11 +524,11 @@ function getBusName(routeId, callback, ecallback) {
     } else {
         ecallback('해당 노선 정보가 없습니다');
     }
-}
+}*/
 
 
 module.exports = {
-    login,getMID, setSession, getSession, setSession2, getSession2, getUserInfo, getSession3, mybusinfo, getUserSession, getBusArrival, getBusName
+    login,getMID, setSession, getSession, setSession2, getSession2, getUserInfo, getSession3, mybusinfo, getUserSession, getBusArrival
 };
 
 
