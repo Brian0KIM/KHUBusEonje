@@ -1,5 +1,4 @@
 require('dotenv').config();
-console.log('API KEY:', process.env.API_KEY);
 const serviceKey = process.env.API_KEY;
 const xml2js2 = require('xml2js');
 const session=[];
