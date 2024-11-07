@@ -186,3 +186,36 @@ app.get('/complain/:stationId/passedby', (req, res) => {
         data: predictions
     });
 });
+
+app.get('/bus/history', async (req, res) => {
+    try {
+        const { routeId, stationId, staOrder, date } = req.query;
+        
+        // 필수 파라미터 검증
+        if (!routeId || !stationId || !staOrder || !date) {
+            return res.status(400).json({
+                ok: false,
+                error: '필수 파라미터가 누락되었습니다'
+            });
+        }
+
+        // 날짜 형식 검증 (YYYY-MM-DD)
+        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+        if (!dateRegex.test(date)) {
+            return res.status(400).json({
+                ok: false,
+                error: '올바른 날짜 형식이 아닙니다 (YYYY-MM-DD)'
+            });
+        }
+
+        const result = await database.getPastBusArrival(routeId, stationId, staOrder, date);
+        res.json(result);
+
+    } catch (error) {
+        console.error('과거 버스 기록 조회 중 오류:', error);
+        res.status(500).json({
+            ok: false,
+            error: '과거 버스 기록을 조회하는 중 오류가 발생했습니다'
+        });
+    }
+});

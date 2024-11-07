@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 require('dotenv').config();//환경변수 설정
 const serviceKey = process.env.API_KEY;
+const gbIsApiKey = process.env.GBIS_API_KEY;
 const xml2js2 = require('xml2js');
 const session=[];
 const bus= {
@@ -604,10 +605,54 @@ function getStoredPredictionsByStation(stationId) {
     }
     return predictions;
 }
+//past history
+function getPastBusArrival(routeId, stationId, staOrder, date) {
+    return new Promise((resolve, reject) => {
+        const url = 'https://api.gbis.go.kr/ws/rest/pastarrivalservice/json';
+        const queryParams = new URLSearchParams({
+            serviceKey: gbIsApiKey,  // .env 파일에 GBIS API 키 추가 필요
+            sDay: date,                            // YYYY-MM-DD 형식
+            routeId: routeId,
+            stationId: stationId,
+            staOrder: staOrder
+        }).toString();
+
+        request({
+            url: `${url}?${queryParams}`,
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'User-Agent': 'Mozilla/5.0',
+                'Origin': 'https://m.gbis.go.kr',
+                'Referer': 'https://m.gbis.go.kr/'
+            }
+        }, function(error, response, body) {
+            if (error) {
+                console.error('과거 버스 도착 정보 조회 실패:', error);
+                reject(error);
+                return;
+            }
+
+            try {
+                const data = JSON.parse(body);
+                resolve({
+                    ok: true,
+                    data: data,
+                    lastUpdate: new Date()
+                });
+            } catch (e) {
+                console.error('데이터 처리 오류:', e);
+                reject(e);
+            }
+        });
+    });
+}
+
+
 
 
 module.exports = {
-    login,getMID, setSession, getSession, setSession2, getSession2, getUserInfo, getSession3, mybusinfo, getUserSession, getBusArrival, getStoredPredictions, startMonitoring, stopMonitoring, getStoredPredictionsByStation
+    login,getMID, setSession, getSession, setSession2, getSession2, getUserInfo, getSession3, mybusinfo, getUserSession, getBusArrival, getStoredPredictions, startMonitoring, stopMonitoring, getStoredPredictionsByStation, getPastBusArrival
 };
 
 
