@@ -381,7 +381,7 @@ function getBusArrival(stationId, callback, ecallback) {
                     const normalBuses = Array.isArray(arrivalData) ? arrivalData : [arrivalData];
                     
                     processedData = normalBuses
-                        .filter(bus => !specialRoutes[bus.routeId])
+                        .filter(bus => !specialRoutes[bus.routeId] && busRouteMap[bus.routeId])
                         .map(bus => ({
                             routeId: bus.routeId,
                             routeName: busRouteMap[bus.routeId],
