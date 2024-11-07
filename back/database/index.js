@@ -36,7 +36,11 @@ const stationMap = {
     "203000037": "경희대정문(사색행)",
     "228000710": "외국어대학(사색행)",
     "228000709": "생명과학대(사색행)",
-    "228000708": "사색의광장(사색행)"
+    "228000708": "사색의광장(사색행)",
+    "228000706": "경희대차고지(1)",
+    "228000707": "경희대차고지(2)"
+
+
 };
 const busArrival = {
     lastUpdate: null,
@@ -302,8 +306,9 @@ function getBusArrival(stationId, callback, ecallback) {
                 }
 
                 const arrivalData = result.response.msgBody.busArrivalList;
-                const processedData = Array.isArray(arrivalData) 
-                    ? arrivalData.map(bus => ({
+                let processedData;
+                if (Array.isArray(arrivalData)) {
+                    processedData = arrivalData.map(bus => ({
                         routeId: bus.routeId,
                         routeName: busRouteMap[bus.routeId],
                         predictTime1: bus.predictTime1,
@@ -313,9 +318,22 @@ function getBusArrival(stationId, callback, ecallback) {
                         staOrder: bus.staOrder,
                         stationId: stationId,
                         stationName: stationMap[stationId]
-                    }))
-                    : [];
-
+                    }));
+                } else {
+                    // 단일 객체인 경우 배열로 변환
+                    processedData = [{
+                        routeId: arrivalData.routeId,
+                        routeName: busRouteMap[arrivalData.routeId],
+                        predictTime1: arrivalData.predictTime1,
+                        predictTime2: arrivalData.predictTime2,
+                        remainSeatCnt1: arrivalData.remainSeatCnt1,
+                        remainSeatCnt2: arrivalData.remainSeatCnt2,
+                        staOrder: arrivalData.staOrder,
+                        stationId: stationId,
+                        stationName: stationMap[stationId]
+                    }];
+                }
+        
                 callback({
                     ok: true,
                     data: processedData,
