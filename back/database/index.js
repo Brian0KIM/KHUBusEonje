@@ -527,10 +527,11 @@ async function monitorBusArrivals() {
 
     // 만료된 데이터 제거
     const now = new Date();
+    now.setHours(now.getHours() + 9);
     for (const [key, value] of arrivalPredictions.data.entries()) {
         if (value.expiryTime <= now) {
             arrivalPredictions.data.delete(key);
-            console.log(`만료된 도착 예정 데이터 제거: ${key}`);
+            console.log(`만료된 데이터 제거: ${key}, 시간: ${now.toLocaleString('ko-KR')}`);
         }
     }
 }
