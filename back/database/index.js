@@ -2,7 +2,7 @@ require('dotenv').config();
 const serviceKey = process.env.API_KEY;
 const xml2js2 = require('xml2js');
 const session=[];
-const bus = {
+const bus= {
     lastUpdate: null,
     currentData: null,
     updateInterval: null,
@@ -32,12 +32,12 @@ const stationMap = {
     "228000703": "경희대체육대학.외대(정문행)",
     "203000125": "경희대학교(정문행)",
     "228000723": "경희대정문(사색행)",
-    "203000037": "경희대정문(사색행)",
     "228000710": "외국어대학(사색행)",
     "228000709": "생명과학대(사색행)",
     "228000708": "사색의광장(사색행)",
     "228000706": "경희대차고지(1)",
-    "228000707": "경희대차고지(2)"
+    "228000707": "경희대차고지(2)",
+    "203000037": "경희대정문(사색행)"
 
 
 };
@@ -45,6 +45,45 @@ const busArrival = {
     lastUpdate: null,
     currentData: {},  // stopId를 키로 사용
     updateIntervals: {}  // 각 정류장별 인터벌 저장
+};
+const specialRouteMapping = {
+    "228000709": {  // 생명과학대(사색행)
+        "234001243": {  // M5107
+            referenceStationId: "228000723",  // 경희대정문(사색행)
+            timeOffset: 1,// 도착 예정 시간에 더할 시간(분)
+            staOrderOffset: 2  //정류장 순서에 더할 값
+        },
+        "233000132": {  // 1560A
+            referenceStationId: "228000723",  // 경희대정문(사색행)
+            timeOffset: 1,
+            staOrderOffset: 2 
+        }
+    },
+    "228000710": {  // 외국어대학(사색행)
+        "234001243": {  // M5107
+            referenceStationId: "228000723",  // 경희대정문(사색행)
+            timeOffset: 1,
+            staOrderOffset: 1  
+        },
+        "233000132": {  // 1560A
+            referenceStationId: "228000723",  // 경희대정문(사색행)
+            timeOffset: 1,
+            staOrderOffset: 1  
+        }
+    },
+    "228000708": {  // 사색의광장(사색행)
+        "234001243": {  // M5107
+            referenceStationId: "228000723",  // 경희대정문(사색행)
+            timeOffset: 3,
+            staOrderOffset: 3  
+        },
+        "233000132": {  // 1560A
+            referenceStationId: "228000723",  // 경희대정문(사색행)
+            timeOffset: 3,
+            staOrderOffset: 3  
+        }
+    }
+    // 필요한 매핑 추가 가능
 };
 
 const setSession = function(id, name, cookie) { 
@@ -244,9 +283,73 @@ function mybusinfo(routeId, callback, ecallback) {
         });
     });
 }
+async function getBusArrivalItem(stationId, routeId) {
+    return new Promise((resolve, reject) => {
+        const url = 'http://apis.data.go.kr/6410000/busarrivalservice/getBusArrivalItem';
+        const queryParams = '?' + encodeURIComponent('serviceKey') + '=' + serviceKey
+            + '&' + encodeURIComponent('stationId') + '=' + encodeURIComponent(stationId)
+            + '&' + encodeURIComponent('routeId') + '=' + encodeURIComponent(routeId);
+        request({
+            url: url + queryParams,
+            method: 'GET'
+        }, function (error, response, body) {
+            if (error) {
+                reject(error);
+                return;
+            }
 
+            const parser = new xml2js2.Parser({ explicitArray: false });
+            parser.parseString(body, (err, result) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+                console.log('getBusArrivalItem 결과:', JSON.stringify(result, null, 2));
+                resolve(result);
+            });
+        });
+    });
+}
 // API 엔드포인트에서 사용할 함수
 function getBusArrival(stationId, callback, ecallback) {
+    // 특별 처리가 필요한 정류장인지 확인
+    const specialRoutes = specialRouteMapping[stationId] || {};
+
+    // 특별 처리가 필요한 노선들의 정보만 가져오기
+    const specialBusPromises = Object.entries(specialRoutes).map(async ([routeId, config]) => {
+        try {
+            const refResult = await getBusArrivalItem(
+                config.referenceStationId,
+                routeId
+            );
+
+            if (refResult.response?.msgBody?.busArrivalItem) {
+                const refBus = refResult.response.msgBody.busArrivalItem;
+                return {
+                    routeId: routeId,
+                    routeName: busRouteMap[routeId],
+                    predictTime1: String(Number(refBus.predictTime1) + config.timeOffset),
+                    predictTime2: String(Number(refBus.predictTime2) + config.timeOffset),
+                    remainSeatCnt1: refBus.remainSeatCnt1,
+                    remainSeatCnt2: refBus.remainSeatCnt2,
+                    staOrder: String(Number(refBus.staOrder) + config.staOrderOffset),
+                    locationNo1: String(Number(refBus.locationNo1)+config.staOrderOffset),
+                    locationNo2: String(Number(refBus.locationNo2)+config.staOrderOffset),
+                    plateNo1: refBus.plateNo1,
+                    plateNo2: refBus.plateNo2,
+                    stationId: stationId,
+                    stationName: stationMap[stationId],
+                    isCalculated: true
+                };
+            }
+            return null;
+        } catch (e) {
+            console.error(`특별 노선 ${routeId} 조회 실패:`, e);
+            return null;
+        }
+    });
+
+    // 일반 버스 정보 가져오기
     const url = 'http://apis.data.go.kr/6410000/busarrivalservice/getBusArrivalList';
     const queryParams = '?' + encodeURIComponent('serviceKey') + '=' + serviceKey
         + '&' + encodeURIComponent('stationId') + '=' + encodeURIComponent(stationId);
@@ -254,85 +357,58 @@ function getBusArrival(stationId, callback, ecallback) {
     request({
         url: url + queryParams,
         method: 'GET'
-    }, function (error, response, body) {
+    }, async function (error, response, body) {
         if (error) {
             console.error('API 요청 실패:', error);
             ecallback('도착 정보를 가져오는데 실패했습니다');
             return;
         }
 
-        // API 응답 상태 코드 확인
-        if (response.statusCode !== 200) {
-            console.error('API 응답 오류:', response.statusCode, body);
-            ecallback('API 서버 오류가 발생했습니다');
-            return;
-        }
-
         const parser = new xml2js2.Parser({ explicitArray: false });
-        parser.parseString(body, (err, result) => {
+        parser.parseString(body, async (err, result) => {
             if (err) {
-                console.error('XML 파싱 오류:', err, 'Raw body:', body);
+                console.error('XML 파싱 오류:', err);
                 ecallback('데이터 처리 중 오류가 발생했습니다');
                 return;
             }
 
             try {
-                // result 객체 구조 로깅
-                console.log('API 응답 구조:', JSON.stringify(result, null, 2));
+                let processedData = [];
 
-                if (!result || !result.response) {
-                    console.error('잘못된 응답 형식:', result);
-                    ecallback('API 응답 형식이 올바르지 않습니다');
-                    return;
+                // 일반 버스 정보 처리 (specialRoutes에 없는 버스들만)
+                if (result?.response?.msgBody?.busArrivalList) {
+                    const arrivalData = result.response.msgBody.busArrivalList;
+                    const normalBuses = Array.isArray(arrivalData) ? arrivalData : [arrivalData];
+                    
+                    processedData = normalBuses
+                        .filter(bus => !specialRoutes[bus.routeId])
+                        .map(bus => ({
+                            routeId: bus.routeId,
+                            routeName: busRouteMap[bus.routeId],
+                            predictTime1: bus.predictTime1,
+                            predictTime2: bus.predictTime2,
+                            remainSeatCnt1: bus.remainSeatCnt1,
+                            remainSeatCnt2: bus.remainSeatCnt2,
+                            staOrder: bus.staOrder,
+                            stationId: stationId,
+                            stationName: stationMap[stationId],
+                            locationNo1: bus.locationNo1,
+                            locationNo2: bus.locationNo2,
+                            plateNo1: bus.plateNo1,
+                            plateNo2: bus.plateNo2
+                        }));
                 }
 
-                // 정류장 ID가 유효하지 않은 경우
-                if (result.response.msgHeader?.resultCode !== '0') {
-                    console.error('API 오류 코드:', result.response.msgHeader);
-                    ecallback('유효하지 않은 정류장입니다');
-                    return;
-                }
+                // 특별 처리 버스 정보 추가
+                const specialBuses = (await Promise.all(specialBusPromises))
+                    .filter(bus => bus !== null);
+                
+                processedData = [...processedData, ...specialBuses];
 
-                // 정상 응답이지만 도착 예정 버스가 없는 경우
-                if (!result.response.msgBody?.busArrivalList) {
-                    callback({
-                        ok: true,
-                        data: [],
-                        message: '도착 예정 버스가 없습니다',
-                        lastUpdate: new Date()
-                    });
-                    return;
-                }
+                // 캐시 업데이트
+                busArrival.currentData[stationId] = processedData;
+                busArrival.lastUpdate = new Date();
 
-                const arrivalData = result.response.msgBody.busArrivalList;
-                let processedData;
-                if (Array.isArray(arrivalData)) {
-                    processedData = arrivalData.map(bus => ({
-                        routeId: bus.routeId,
-                        routeName: busRouteMap[bus.routeId],
-                        predictTime1: bus.predictTime1,
-                        predictTime2: bus.predictTime2,
-                        remainSeatCnt1: bus.remainSeatCnt1,
-                        remainSeatCnt2: bus.remainSeatCnt2,
-                        staOrder: bus.staOrder,
-                        stationId: stationId,
-                        stationName: stationMap[stationId]
-                    }));
-                } else {
-                    // 단일 객체인 경우 배열로 변환
-                    processedData = [{
-                        routeId: arrivalData.routeId,
-                        routeName: busRouteMap[arrivalData.routeId],
-                        predictTime1: arrivalData.predictTime1,
-                        predictTime2: arrivalData.predictTime2,
-                        remainSeatCnt1: arrivalData.remainSeatCnt1,
-                        remainSeatCnt2: arrivalData.remainSeatCnt2,
-                        staOrder: arrivalData.staOrder,
-                        stationId: stationId,
-                        stationName: stationMap[stationId]
-                    }];
-                }
-        
                 callback({
                     ok: true,
                     data: processedData,
@@ -340,7 +416,6 @@ function getBusArrival(stationId, callback, ecallback) {
                 });
             } catch (e) {
                 console.error('데이터 처리 오류:', e.message, e.stack);
-                console.error('처리 중이던 데이터:', result);
                 ecallback('데이터 처리 중 오류가 발생했습니다');
             }
         });
