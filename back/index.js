@@ -168,3 +168,21 @@ app.get('/stop/:path/:stationId/eta', (req, res) => {
         }
     );
 });
+
+app.get('/complain/:stationId/passedby', (req, res) => {
+    const stationId = req.params.stationId;
+    const predictions = database.getStoredPredictionsByStation(stationId);
+    
+    if (!predictions || predictions.length === 0) {
+        res.status(404).json({
+            ok: false,
+            message: "저장된 값이 없습니다"
+        });
+        return;
+    }
+
+    res.json({
+        ok: true,
+        data: predictions
+    });
+});

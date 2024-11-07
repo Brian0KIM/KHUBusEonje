@@ -427,80 +427,6 @@ function getBusArrival(stationId, callback, ecallback) {
     });
 }
 //DB 저장용 함수
-function getBusArrival2(stationId, callback, ecallback) {
-    const url = 'http://apis.data.go.kr/6410000/busarrivalservice/getBusArrivalList';
-    const queryParams = '?' + encodeURIComponent('serviceKey') + '=' + serviceKey
-        + '&' + encodeURIComponent('stationId') + '=' + encodeURIComponent(stationId);
-
-    request({
-        url: url + queryParams,
-        method: 'GET'
-    }, function (error, response, body) {
-        if (error) {
-            console.error('정류장 도착 정보 조회 실패:', error);
-            ecallback('도착 정보를 가져오는데 실패했습니다');
-            return;
-        }
-
-        const parser = new xml2js2.Parser({ explicitArray: false });
-        parser.parseString(body, (err, result) => {
-            if (err) {
-                console.error('XML 파싱 오류:', err);
-                ecallback('데이터 처리 중 오류가 발생했습니다');
-                return;
-            }
-
-            try {
-                if (result && result.response && result.response.msgBody) {
-                    const arrivalData = result.response.msgBody.busArrivalList;
-                    
-                    // 도착 정보 가공
-                    const processedData = Array.isArray(arrivalData) 
-                        ? arrivalData.map(bus => ({
-                            routeId: bus.routeId,
-                            routeName: busRouteMap[bus.routeId],
-                            predictTime1: bus.predictTime1,
-                            predictTime2: bus.predictTime2,
-                            remainSeatCnt1: bus.remainSeatCnt1,
-                            remainSeatCnt2: bus.remainSeatCnt2,
-                            staOrder: bus.staOrder,
-                            stationId: stationId
-                        }))
-                        : [];
-
-                    // 데이터 저장
-                    busArrival.currentData[stationId] = processedData;
-                    busArrival.lastUpdate = new Date();
-
-                    // 주기적 업데이트 설정 (아직 없는 경우)
-                    if (!busArrival.updateIntervals[stationId]) {
-                        busArrival.updateIntervals[stationId] = setInterval(() => {
-                            getBusArrival(stationId, 
-                                () => {
-                                    console.log(`정류장 ${stationId} 도착 정보 자동 업데이트 완료`);
-                                }, 
-                                (error) => {
-                                    console.error(`정류장 ${stationId} 자동 업데이트 실패:`, error);
-                                }
-                            );
-                        }, 30000); // 30초마다 업데이트
-                    }
-
-                    callback({
-                        ok: true,
-                        data: processedData,
-                        lastUpdate: busArrival.lastUpdate
-                    });
-                } else {
-                    ecallback('도착 예정 버스가 없습니다');
-                }
-            } catch (e) {
-                console.error('데이터 처리 오류:', e);
-                ecallback('데이터 처리 중 오류가 발생했습니다');
-            }
-        });
-    });
-}
 
 function findStationName(stationId) {
     // 먼저 stationMap에서 찾기
@@ -512,81 +438,176 @@ function findStationName(stationId) {
     const station = busStationData.find(station => station.STTN_ID === stationId);
     return station ? station.STTN_NM_INFO : '알 수 없는 정류장';
 }
+//---------Monitor Bus Arrival---------
+const arrivalPredictions = {
+    data: new Map(),  // 데이터 저장
+    monitoringInterval: null  // 모니터링 인터벌
+};
 
-/*function getBusName(routeId, callback, ecallback) {
-    const routeName = busRouteMap[routeId];
-    if (routeName) {
-        callback({
-            ok: true,
-            routeId: routeId,
-            routeName: routeName
+const MONITORED_STATIONS = ['203000125', '228000723'];
+
+// getBusLocationInfo 함수 - Promise 기반으로 변경
+function getBusLocationInfo(stationId) {
+    return new Promise((resolve, reject) => {
+        const url = 'http://apis.data.go.kr/6410000/busarrivalservice/getBusArrivalList';
+        const queryParams = '?' + encodeURIComponent('serviceKey') + '=' + serviceKey
+            + '&' + encodeURIComponent('stationId') + '=' + encodeURIComponent(stationId);
+        request({
+            url: url + queryParams,
+            method: 'GET'
+        }, function (error, response, body) {
+            if (error) {
+                reject(error);
+                return;
+            }
+
+            const parser = new xml2js2.Parser({ explicitArray: false });
+            parser.parseString(body, (err, result) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+                resolve(result);
+            });
         });
-    } else {
-        ecallback('해당 노선 정보가 없습니다');
+    });
+}
+async function monitorBusArrivals() {
+    for (const stationId of MONITORED_STATIONS) {
+        try {
+            const result = await getBusLocationInfo(stationId);
+            if (!result?.response?.msgBody?.busArrivalList) continue;
+
+            const buses = Array.isArray(result.response.msgBody.busArrivalList) 
+                ? result.response.msgBody.busArrivalList 
+                : [result.response.msgBody.busArrivalList];
+
+            for (const bus of buses) {
+                // busRouteMap에 있는 노선만 처리하고, routeId가 일치하는지 확인
+                if (busRouteMap[bus.routeId]) {
+                    const currentTime = new Date();
+                    currentTime.setHours(currentTime.getHours() + 9);//UTC+9
+                    // predictTime1과 plateNo1 처리
+                    if (bus.predictTime1 && bus.plateNo1 && parseInt(bus.predictTime1) <= 2) {
+                        const key = `${stationId}-${bus.routeId}-${bus.plateNo1}-1`;
+                        arrivalPredictions.data.set(key, {
+                            stationId,
+                            routeId: bus.routeId,  // API에서 받아온 실제 routeId 사용
+                            plateNo: bus.plateNo1,
+                            predictTime: parseInt(bus.predictTime1),
+                            routeName: busRouteMap[bus.routeId],
+                            savedTime: currentTime,
+                            expectedArrival: new Date(currentTime.getTime() + (parseInt(bus.predictTime1) * 60000)),
+                            expiryTime: new Date(currentTime.getTime() + (10 * 60000))
+                        });
+                        console.log(`버스1 도착 예정 데이터 저장: ${key}, routeId: ${bus.routeId}`);
+                    }
+
+                    // predictTime2와 plateNo2 처리
+                    if (bus.predictTime2 && bus.plateNo2 && parseInt(bus.predictTime2) <= 2) {
+                        const key = `${stationId}-${bus.routeId}-${bus.plateNo2}-2`;
+                        arrivalPredictions.data.set(key, {
+                            stationId,
+                            routeId: bus.routeId,  // API에서 받아온 실제 routeId 사용
+                            plateNo: bus.plateNo2,
+                            predictTime: parseInt(bus.predictTime2),
+                            routeName: busRouteMap[bus.routeId],
+                            savedTime: currentTime,
+                            expectedArrival: new Date(currentTime.getTime() + (parseInt(bus.predictTime2) * 60000)),
+                            expiryTime: new Date(currentTime.getTime() + (10 * 60000))
+                        });
+                        console.log(`버스2 도착 예정 데이터 저장: ${key}, routeId: ${bus.routeId}`);
+                    }
+                }
+            }
+        } catch (error) {
+            console.error(`버스 도착 정보 조회 실패 (${stationId}):`, error);
+        }
     }
-}*/
+
+    // 만료된 데이터 제거
+    const now = new Date();
+    for (const [key, value] of arrivalPredictions.data.entries()) {
+        if (value.expiryTime <= now) {
+            arrivalPredictions.data.delete(key);
+            console.log(`만료된 도착 예정 데이터 제거: ${key}`);
+        }
+    }
+}
+
+const MONITORING_INTERVAL = 30000; 
+
+// 모니터링 시작 함수
+function startMonitoring() {
+    if (!arrivalPredictions.monitoringInterval) {
+        console.log('모니터링 시작...');
+        
+        // 첫 실행
+        monitorBusArrivals()
+            .then(() => {
+                console.log('첫 모니터링 완료');
+                console.log('저장된 데이터:', getStoredPredictions());
+            })
+            .catch(error => {
+                console.error('모니터링 중 오류:', error);
+            });
+
+        // 주기적 실행 설정
+        arrivalPredictions.monitoringInterval = setInterval(() => {
+            monitorBusArrivals()
+                .then(() => {
+                    console.log('주기적 모니터링 완료');
+                    console.log('저장된 데이터:', getStoredPredictions());
+                })
+                .catch(error => {
+                    console.error('주기적 모니터링 중 오류:', error);
+                });
+        }, MONITORING_INTERVAL);
+
+        console.log('버스 도착 예정 모니터링 시작');
+    }
+}
+
+// 모니터링 중지 함수
+function stopMonitoring() {
+    if (arrivalPredictions.monitoringInterval) {
+        clearInterval(arrivalPredictions.monitoringInterval);
+        arrivalPredictions.monitoringInterval = null;
+        console.log('버스 도착 예정 모니터링 중지');
+    }
+}
+
+// 서버 시작 시 모니터링 시작
+startMonitoring();
+
+// 저장된 데이터 조회 함수
+function getStoredPredictions() {
+    const predictions = [];
+    for (const [key, value] of arrivalPredictions.data.entries()) {
+        predictions.push({
+            key,
+            ...value,
+        });
+    }
+    return predictions;
+}
+
+
+
+function getStoredPredictionsByStation(stationId) {
+    const predictions = [];
+    for (const [key, value] of arrivalPredictions.data.entries()) { // O(n)
+        if (value.stationId === stationId) {                        // O(1)
+            predictions.push({...value});                           // O(1)
+        }
+    }
+    return predictions;
+}
 
 
 module.exports = {
-    login,getMID, setSession, getSession, setSession2, getSession2, getUserInfo, getSession3, mybusinfo, getUserSession, getBusArrival
+    login,getMID, setSession, getSession, setSession2, getSession2, getUserInfo, getSession3, mybusinfo, getUserSession, getBusArrival, getStoredPredictions, startMonitoring, stopMonitoring, getStoredPredictionsByStation
 };
 
 
 
-/*function mybusinfo(routeId, callback, ecallback) {
-    const url = 'http://apis.data.go.kr/6410000/buslocationservice/getBusLocationList';
-    const queryParams = '?' + encodeURIComponent('serviceKey') + '=' + serviceKey
-        + '&' + encodeURIComponent('routeId') + '=' + encodeURIComponent(routeId);
-
-    // 즉시 API 호출
-    request({
-        url: url + queryParams,
-        method: 'GET'
-    }, function (error, response, body) {
-        if (error) {
-            console.error('버스 정보 업데이트 실패:', error);
-            ecallback('버스 정보를 가져오는데 실패했습니다');
-            return;
-        }
-
-        const parser = new xml2js2.Parser({ explicitArray: false });
-        parser.parseString(body, (err, result) => {
-            if (err) {
-                console.error('XML 파싱 오류:', err);
-                ecallback('데이터 처리 중 오류가 발생했습니다');
-                return;
-            }
-
-            try {
-                if (result && result.response && result.response.msgBody) {
-                    // 데이터 저장
-                    bus.currentData = result.response.msgBody.busLocationList;
-                    bus.lastUpdate = new Date();
-
-                    // 주기적 업데이트가 설정되지 않았다면 설정
-                    if (!bus.updateInterval) {
-                        bus.updateInterval = setInterval(() => {
-                            mybusinfo(routeId, () => {
-                                console.log('버스 정보 자동 업데이트 완료');
-                            }, (error) => {
-                                console.error('자동 업데이트 실패:', error);
-                            });
-                        }, 30000); // 30초마다 업데이트
-                    }
-
-                    // 성공 응답
-                    callback({
-                        ok: true,
-                        data: bus.currentData,
-                        lastUpdate: bus.lastUpdate
-                    });
-                } else {
-                    ecallback('버스 정보가 없습니다');
-                }
-            } catch (e) {
-                console.error('데이터 처리 오류:', e);
-                ecallback('데이터 처리 중 오류가 발생했습니다');
-            }
-        });
-    });
-}*/
