@@ -1,0 +1,21 @@
+# Dart 관련
+.dart_tool/
+.packages
+build/
+pubspec.lock
+
+# IDE 관련
+.idea/
+.vscode/
+*.iml
+*.iws
+.DS_Store
+
+# 컴파일된 파일들
+*.dart.js
+*.js_
+*.js.deps
+*.js.map
+
+# 로그 파일
+*.log
