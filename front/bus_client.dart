@@ -1,23 +1,28 @@
-import 'dart:async';  // Timer 클래스용
-import 'dart:convert';  // jsonDecode, JsonEncoder용
-import 'dart:io';  // stdin용
-import 'package:http/http.dart' as http;  // http 요청용
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+import 'package:dio/dio.dart';
 
-const String baseUrl = 'http://localhost:8081';  // baseUrl 상수 정의
+const String baseUrl = 'http://localhost:8081';
 
 class BusClient {
+  late final Dio _dio;
   Timer? _busTimer;
   Timer? _stopTimer;
   Timer? _passedByTimer;
+
+  BusClient() {
+    _dio = Dio(BaseOptions(
+      baseUrl: baseUrl,
+      connectTimeout: Duration(seconds: 5),
+      receiveTimeout: Duration(seconds: 3),
+    ));
+  }
   
   Future<void> startBusEtaPolling(String routeId) async {
-    // 기존 타이머 취소
     _busTimer?.cancel();
-    
-    // 즉시 첫 번째 데이터 가져오기
     await _fetchBusEta(routeId);
     
-    // 15초마다 새로고침
     _busTimer = Timer.periodic(Duration(seconds: 15), (_) async {
       await _fetchBusEta(routeId);
     });
@@ -29,7 +34,6 @@ class BusClient {
   
   Future<void> startStopEtaPolling(String stationId) async {
     _stopTimer?.cancel();
-    
     await _fetchStopEta(stationId);
     
     _stopTimer = Timer.periodic(Duration(seconds: 15), (_) async {
@@ -43,7 +47,6 @@ class BusClient {
   
   Future<void> startPassedByPolling(String stationId) async {
     _passedByTimer?.cancel();
-    
     await _fetchPassedBy(stationId);
     
     _passedByTimer = Timer.periodic(Duration(seconds: 30), (_) async {
@@ -57,49 +60,46 @@ class BusClient {
   
   Future<void> _fetchBusEta(String routeId) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/bus/$routeId/eta'));
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        print('\x1B[2J\x1B[0;0H'); // 화면 클리어
-        print('버스 도착 정보 (노선 ID: $routeId)');
-        print(JsonEncoder.withIndent('  ').convert(data));
+      final response = await _dio.get('/bus/$routeId/eta');
+      print('\x1B[2J\x1B[0;0H'); // 화면 클리어
+      print('버스 도착 정보 (노선 ID: $routeId)');
+      print(JsonEncoder.withIndent('  ').convert(response.data));
+    } on DioException catch (e) {
+      if (e.response != null) {
+        print('오류: ${e.response?.statusCode}');
       } else {
-        print('오류: ${response.statusCode}');
+        print('요청 실패: ${e.message}');
       }
-    } catch (e) {
-      print('요청 실패: $e');
     }
   }
   
   Future<void> _fetchStopEta(String stationId) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/stop/$stationId/eta'));
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        print('\x1B[2J\x1B[0;0H');
-        print('정류장 도착 정보 (정류장 ID: $stationId)');
-        print(JsonEncoder.withIndent('  ').convert(data));
+      final response = await _dio.get('/stop/$stationId/eta');
+      print('\x1B[2J\x1B[0;0H');
+      print('정류장 도착 정보 (정류장 ID: $stationId)');
+      print(JsonEncoder.withIndent('  ').convert(response.data));
+    } on DioException catch (e) {
+      if (e.response != null) {
+        print('오류: ${e.response?.statusCode}');
       } else {
-        print('오류: ${response.statusCode}');
+        print('요청 실패: ${e.message}');
       }
-    } catch (e) {
-      print('요청 실패: $e');
     }
   }
   
   Future<void> _fetchPassedBy(String stationId) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/complain/$stationId/passedby'));
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        print('\x1B[2J\x1B[0;0H');
-        print('무정차 기록 (정류장 ID: $stationId)');
-        print(JsonEncoder.withIndent('  ').convert(data));
+      final response = await _dio.get('/complain/$stationId/passedby');
+      print('\x1B[2J\x1B[0;0H');
+      print('무정차 기록 (정류장 ID: $stationId)');
+      print(JsonEncoder.withIndent('  ').convert(response.data));
+    } on DioException catch (e) {
+      if (e.response != null) {
+        print('오류: ${e.response?.statusCode}');
       } else {
-        print('오류: ${response.statusCode}');
+        print('요청 실패: ${e.message}');
       }
-    } catch (e) {
-      print('요청 실패: $e');
     }
   }
 }
