@@ -7,3 +7,4 @@ environment:
 
 dependencies:
   dio: ^5.4.0
+  envied: ^0.5.3

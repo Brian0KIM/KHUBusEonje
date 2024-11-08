@@ -186,7 +186,7 @@ class BusClient {
     }
   }
 
-  Future<void> getBusHistory(String routeId, String stationId, String date) async {
+   Future<void> getBusHistory(String routeId, String stationId, String date) async {
     try {
       final response = await _dio.get('/bus/history/byBus',
         queryParameters: {
@@ -198,7 +198,13 @@ class BusClient {
       
       if (response.data['ok']) {
         print('\n버스 운행 기록:');
-        print(JsonEncoder.withIndent('  ').convert(response.data));
+        final data = response.data['data'] as List;
+        for (var record in data) {
+          print('도착 시간: ${record['RArrivalDate']}');
+          print('노선 ID: ${record['routeId']}');
+          print('정류장 ID: ${record['stationId']}');
+          print('-------------------');
+        }
       }
     } on DioException catch (e) {
       if (e.response != null) {
@@ -221,8 +227,13 @@ class BusClient {
       if (response.data['ok']) {
         print('\n시간별 운행 기록:');
         print('정류장: ${response.data['stationName']}');
-        print('마지막 업데이트: ${response.data['lastUpdate']}');
-        print(JsonEncoder.withIndent('  ').convert(response.data['data']));
+        final data = response.data['data'] as List;
+        for (var record in data) {
+          print('도착 시간: ${record['RArrivalDate']}');
+          print('노선 ID: ${record['routeId']}');
+          print('정류장 ID: ${record['stationId']}');
+          print('-------------------');
+        }
       }
     } on DioException catch (e) {
       if (e.response != null) {

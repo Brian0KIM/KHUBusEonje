@@ -19,3 +19,5 @@ pubspec.lock
 
 # 로그 파일
 *.log
+
+.env
