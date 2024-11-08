@@ -214,7 +214,7 @@ app.get('/complain/:stationId/passedby', (req, res) => {
     });
 });
 
-app.get('/bus/history', async (req, res) => {
+app.get('/bus/history/byBus', async (req, res) => {
     try {
         const { routeId, stationId, date } = req.query;
         
