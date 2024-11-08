@@ -77,18 +77,47 @@ app.post('/user/logout', (req, res) => {
     const id = req.body.id
     const cookie = req.body.cookie
 
-    database.logout(id, cookie, (data) => {
-        res.json({
-            ok: true
-        })
-    },
-    (err) => {
-        res.status(400).json({
+    // 세션 유효성 검증
+    const userSession = database.getUserSession(id);
+    if (!userSession || !CheckSession(cookie, userSession.Cookie)) {
+        res.status(401).json({
             ok: false,
-            err: err
-        })
-    })
-})
+            error: '유효하지 않은 세션입니다'
+        });
+        return;
+    }
+
+    // 도서관 로그아웃 요청
+    request.get({
+        url: 'https://lib.khu.ac.kr/logout',
+        headers: {
+            'User-Agent': 'request',
+            Cookie: cookie
+        }
+    }, function(err, response, body) {
+        if (err) {
+            console.error('도서관 로그아웃 실패:', err);
+            res.status(500).json({
+                ok: false,
+                error: '도서관 로그아웃 중 오류가 발생했습니다'
+            });
+            return;
+        }
+
+        // 세션 삭제
+        database.logout(id, cookie, () => {
+            res.json({
+                ok: true,
+                message: '로그아웃 성공'
+            });
+        }, (err) => {
+            res.status(500).json({
+                ok: false,
+                error: err
+            });
+        });
+    });
+});
 app.get('/user/status', (req, res) => {
     const id = req.query.id;  // id는 쿼리로 받고
     const cookie = req.headers.authorization;  // 쿠키는 헤더로 받음
@@ -288,5 +317,3 @@ app.get('/bus/history/byTime', async (req, res) => {
 });
 
 
-
-// staOrder 매핑 객체 추가

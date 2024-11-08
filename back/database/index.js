@@ -430,7 +430,23 @@ function getUserInfo(cookie, callback, ecallback) {
         callback(JSON.parse(body))
     })
 }
-
+const logout = function(id, cookie, callback, ecallback) {
+    try {
+        // 세션 배열에서 해당 사용자 정보 찾기
+        const sessionIndex = session.findIndex(user => user.id === id);
+        
+        if (sessionIndex !== -1) {
+            // 세션 배열에서 해당 사용자 정보 삭제
+            session.splice(sessionIndex, 1);
+            callback();
+        } else {
+            ecallback('세션 정보를 찾을 수 없습니다');
+        }
+    } catch (error) {
+        console.error('로그아웃 처리 중 오류:', error);
+        ecallback('로그아웃 처리 중 오류가 발생했습니다');
+    }
+}
 function mybusinfo(routeId, callback, ecallback) {
     const url = 'http://apis.data.go.kr/6410000/buslocationservice/getBusLocationList';
     const queryParams = '?' + encodeURIComponent('serviceKey') + '=' + serviceKey
@@ -992,5 +1008,5 @@ async function fetchBusHistory(routeId, stationId, staOrder, date) {
 
 
 module.exports = {
-    login,getMID, setSession, getSession, setSession2, getSession2, getUserInfo, getSession3, mybusinfo, getUserSession, getBusArrival, getStoredPredictions, startMonitoring, stopMonitoring, getStoredPredictionsByStation, getPastBusArrival, getStaOrder, stationRouteOrder,busRouteMap,stationMap
+    login,getMID, setSession, getSession, setSession2, getSession2, getUserInfo, getSession3, mybusinfo, getUserSession, getBusArrival, getStoredPredictions, startMonitoring, stopMonitoring, getStoredPredictionsByStation, getPastBusArrival, getStaOrder, stationRouteOrder,busRouteMap,stationMap,logout
 };
