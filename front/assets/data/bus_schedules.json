@@ -1,0 +1,58 @@
+{
+    "9": {
+      "update_date": "2022-11-01",
+      "company": "용남고속",
+      "contact": "031-295-7105",
+      "schedules": {
+        "weekday": {
+          "trips": 40,
+          "interval": "20~30",
+          "times": [
+            {"trip": 1, "depart_from": "", "arrive_at": "05:30", "khu_depart": "08:15", "khu_arrive": "11:40", "khu_depart2": "15:00", "khu_arrive2": "18:20", "last_stop": "21:40"},
+            {"trip": 2, "depart_from": "", "arrive_at": "05:50", "khu_depart": "08:40", "khu_arrive": "12:05", "khu_depart2": "15:25", "khu_arrive2": "18:45", "last_stop": "22:00"},
+            {"trip": 3, "depart_from": "", "arrive_at": "06:10", "khu_depart": "09:05", "khu_arrive": "12:30", "khu_depart2": "15:50", "khu_arrive2": "19:10", "last_stop": "22:30"},
+            {"trip": 4, "depart_from": "", "arrive_at": "06:30", "khu_depart": "09:35", "khu_arrive": "12:55", "khu_depart2": "16:15", "khu_arrive2": "19:35", "last_stop": "23:00"},
+            {"trip": 5, "depart_from": "04:50", "arrive_at": "06:50", "khu_depart": "10:00", "khu_arrive": "13:20", "khu_depart2": "16:40", "khu_arrive2": "20:00", "last_stop": ""},
+            {"trip": 6, "depart_from": "05:10", "arrive_at": "07:10", "khu_depart": "10:25", "khu_arrive": "13:45", "khu_depart2": "17:05", "khu_arrive2": "20:25", "last_stop": ""},
+            {"trip": 7, "depart_from": "05:30", "arrive_at": "07:30", "khu_depart": "10:50", "khu_arrive": "14:10", "khu_depart2": "17:30", "khu_arrive2": "20:50", "last_stop": ""},
+            {"trip": 8, "depart_from": "05:50", "arrive_at": "07:50", "khu_depart": "11:15", "khu_arrive": "14:35", "khu_depart2": "17:55", "khu_arrive2": "21:15", "last_stop": ""}
+          ]
+        },
+        "saturday": {
+          "trips": 25,
+          "interval": "30~50",
+          "times": [
+            {"trip": 1, "depart_from": "", "arrive_at": "05:30", "khu_depart": "08:30", "khu_arrive": "11:40", "khu_depart2": "15:10", "khu_arrive2": "18:30", "last_stop": "22:10"},
+            {"trip": 2, "depart_from": "", "arrive_at": "06:05", "khu_depart": "09:05", "khu_arrive": "12:20", "khu_depart2": "15:50", "khu_arrive2": "19:10", "last_stop": "23:00"},
+            {"trip": 3, "depart_from": "04:50", "arrive_at": "06:40", "khu_depart": "09:40", "khu_arrive": "13:00", "khu_depart2": "16:30", "khu_arrive2": "19:50", "last_stop": ""},
+            {"trip": 4, "depart_from": "05:20", "arrive_at": "07:15", "khu_depart": "10:15", "khu_arrive": "13:40", "khu_depart2": "17:10", "khu_arrive2": "20:30", "last_stop": ""},
+            {"trip": 5, "depart_from": "05:50", "arrive_at": "07:50", "khu_depart": "10:50", "khu_arrive": "14:20", "khu_depart2": "17:50", "khu_arrive2": "21:10", "last_stop": ""}
+          ]
+        },
+        "holiday": {
+          "trips": 20,
+          "interval": "35~60",
+          "times": [
+            {"trip": 1, "depart_from": "", "arrive_at": "05:30", "khu_depart": "08:30", "khu_arrive": "11:40", "khu_depart2": "15:10", "khu_arrive2": "18:30", "last_stop": "22:10"},
+            {"trip": 2, "depart_from": "", "arrive_at": "06:15", "khu_depart": "09:20", "khu_arrive": "12:30", "khu_depart2": "16:00", "khu_arrive2": "19:20", "last_stop": "23:00"},
+            {"trip": 3, "depart_from": "04:50", "arrive_at": "06:50", "khu_depart": "09:50", "khu_arrive": "13:20", "khu_depart2": "16:50", "khu_arrive2": "20:10", "last_stop": ""},
+            {"trip": 4, "depart_from": "05:50", "arrive_at": "07:50", "khu_depart": "10:50", "khu_arrive": "14:20", "khu_depart2": "17:30", "khu_arrive2": "21:10", "last_stop": ""}
+          ]
+        }
+      },
+      "stops": [
+        {"name": "경희대학교", "offset": 0},
+        {"name": "영통역", "offset": 10},
+        {"name": "대광빌리지", "offset": 14},
+        {"name": "매탄레이크아파트", "offset": 16},
+        {"name": "매탄공원", "offset": 23},
+        {"name": "매탄주공4,5단지", "offset": 29},
+        {"name": "KBS수원센터", "offset": 33},
+        {"name": "이춘택병원", "offset": 39},
+        {"name": "수원역", "offset": 43},
+        {"name": "구운동입구", "offset": 53},
+        {"name": "금곡동강남아파트", "offset": 60},
+        {"name": "수원kt소닉붐아레나", "offset": 65}
+      ]
+    }
+  }

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'utils.dart';
+import 'timetable_display.dart';
 const String baseUrl = 'http://localhost:8081';
 
 class BusClient {
@@ -373,6 +374,33 @@ Future<void> displayCompanyInfo(Map<String, dynamic> companyData) async {
     
     if (companyData['url'] != null && companyData['url'] != 'none') {
       print('\n웹사이트: ${companyData['url']}');
+    }
+  }
+    Future<void> displayBusTimeTable(String routeName) async {
+    try {
+      final file = File('./assets/data/bus_schedules.json');
+      if (!await file.exists()) {
+        print('시간표 데이터 파일을 찾을 수 없습니다.');
+        return;
+      }
+
+      final jsonString = await file.readAsString();
+      final schedules = json.decode(jsonString);
+
+      if (!schedules.containsKey(routeName)) {
+        print('해당 버스의 시간표 정보가 없습니다.');
+        return;
+      }
+
+      switch(routeName) {
+        case '9':
+          TimeTableDisplay.displaySchedule(schedules[routeName]);
+          break;
+        default:
+          print('지원하지 않는 버스 노선입니다.');
+      }
+    } catch (e) {
+      print('시간표 로딩 중 오류 발생: $e');
     }
   }
 }

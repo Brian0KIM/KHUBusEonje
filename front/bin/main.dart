@@ -46,6 +46,7 @@ void main() async {
     print('7. 버스별 운행 기록');
     print('8. 시간별 운행 기록');
     print('9. 민원 정보');
+    print('10. 시간표 확인');
     print('0. 종료');
     
     stdout.write('선택하세요: ');
@@ -202,10 +203,28 @@ void main() async {
           }
         }
         break;
+      case '10':
+       print('\n시간표를 조회할 버스를 선택하세요:');
+        busRouteMap.keys.forEach((name) => print(name));
+        stdout.write('선택: ');
+        final busChoice = stdin.readLineSync()?.trim();
+        String? routeName;
+        switch(busChoice) {
+          case '9':
+            routeName = '9';
+            break;
+          default:
+            print('올바른 번호를 선택하세요.');
+            break;
+        }
+        if (routeName != null) {
+          await client.displayBusTimeTable(routeName);
+        }
+        break;
       case '0':
         exit(0);
       default:
-        print('잘못된 선택입니다.');
+        print(' ');
     }
   }
 }
