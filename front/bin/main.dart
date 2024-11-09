@@ -47,6 +47,7 @@ void main() async {
     print('8. 시간별 운행 기록');
     print('9. 민원 정보');
     print('10. 시간표 확인');
+    print('11. 지도 보기');
     print('0. 종료');
     
     stdout.write('선택하세요: ');
@@ -219,6 +220,21 @@ void main() async {
         }
         if (routeName != null) {
           await client.displayBusTimeTable(routeName);
+        }
+        break;
+      case '11':
+        final url = 'https://map.kakao.com/link/map/경희대학교,37.2477,127.0773';
+        try {
+          if (Platform.isWindows) {
+            await Process.run('start', [url], runInShell: true);
+          } else if (Platform.isMacOS) {
+            await Process.run('open', [url]);
+          } else if (Platform.isLinux) {
+            await Process.run('xdg-open', [url]);
+          }
+          print('브라우저에서 지도를 열었습니다.');
+        } catch (e) {
+          print('지도를 여는 데 실패했습니다: $e');
         }
         break;
       case '0':

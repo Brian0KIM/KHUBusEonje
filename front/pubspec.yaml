@@ -8,6 +8,7 @@ environment:
 dependencies:
   dio: ^5.4.0
   envied: ^0.5.3
+  url_launcher: ^6.2.5
 
 assets:
   - assets/data/
