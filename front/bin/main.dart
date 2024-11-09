@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:bus_client/bus_client.dart';
+import 'package:bus_client/config.dart';
 const Map<String, String> busRouteMap = {
   "9": "200000103",
   "1112": "234000016",
@@ -9,8 +10,7 @@ const Map<String, String> busRouteMap = {
   "1560A": "234000884",
   "1560B": "228000433"
 };
-const String KHU_ID = '';
-const String KHU_PW = '';
+
 const Map<String, String> stationMap = {
   "사색의광장(정문행)": "228001174",
   "생명과학대.산업대학(정문행)": "228000704",
@@ -22,6 +22,10 @@ const Map<String, String> stationMap = {
   "사색의광장(사색행)": "228000708",
   "경희대차고지(1)": "228000706",
   "경희대차고지(2)": "228000707"
+};
+const Map<String, String> pathMap = {
+  "1": "203000125",
+  "2": "228000723"
 };
 String? getRouteId(String routeName) => busRouteMap[routeName];
 String? getStationId(String stationName) => stationMap[stationName];
@@ -47,7 +51,7 @@ void main() async {
     switch (choice) {
       case '1':
         case '1':
-        await client.login(KHU_ID, KHU_PW);
+        await client.login(Config.KHU_ID, Config.KHU_PW);
         break;
       case '2':
         await client.logout();
@@ -71,70 +75,110 @@ void main() async {
         break;
       case '5':
         print('\n사용 가능한 정류장:');
-        stationMap.keys.forEach((name) => print(name));
-        stdout.write('\n정류장명을 입력하세요: ');
-        final stationName = stdin.readLineSync();
-        if (stationName != null) {
-          final stationId = getStationId(stationName);
-          if (stationId != null) {
-            await client.startStopEtaPolling(stationId);
-          } else {
-            print('올바르지 않은 정류장명입니다.');
+        var stationList = stationMap.keys.toList();
+        for (var i = 0; i < stationList.length; i++) {
+            print('${i + 1}. ${stationList[i]}');
+        }
+    
+        stdout.write('\n정류장 번호를 입력하세요 (1-${stationList.length}): ');
+        final input = stdin.readLineSync()?.trim();
+        if (input != null) {
+        final index = int.tryParse(input);
+        if (index != null && index >= 1 && index <= stationList.length) {
+            final stationName = stationList[index - 1];
+            final stationId = getStationId(stationName);
+            if (stationId != null) {
+                await client.startStopEtaPolling(stationId);
+            }
+        } else {
+            print('올바른 번호를 입력해주세요 (1-${stationList.length}).');
           }
         }
         break;
       case '6':
-        print('\n사용 가능한 정류장:');
-        stationMap.keys.forEach((name) => print(name));
-        stdout.write('\n정류장명을 입력하세요: ');
-        final stationName = stdin.readLineSync();
-        if (stationName != null) {
-          final stationId = getStationId(stationName);
-          if (stationId != null) {
-            await client.startPassedByPolling(stationId);
-          } else {
-            print('올바르지 않은 정류장명입니다.');
-          }
+         print('\n사용 가능한 방향:');
+        print('1. 경희대학교(정문행)');
+        print('2. 경희대정문(사색행)');
+        
+        stdout.write('\n방향 번호를 입력하세요 (1-2): ');
+        final input = stdin.readLineSync()?.trim();
+        
+        if (input != null) {
+            final index = int.tryParse(input);
+            if (index != null && index >= 1 && index <= 2) {
+                final pathId = pathMap[index.toString()];  // index를 문자열로 변환
+                if (pathId != null) {
+                    await client.startPassedByPolling(pathId);
+                } else {
+                    print('경로 ID를 찾을 수 없습니다.');
+                }
+            } else {
+                print('올바른 번호를 입력해주세요 (1-2).');
+            }
         }
         break;
       case '7':
         print('\n사용 가능한 버스 노선:');
-        busRouteMap.keys.forEach((name) => print(name));
-        stdout.write('\n노선명을 입력하세요: ');
-        final routeName = stdin.readLineSync();
+        var routeList = busRouteMap.keys.toList();
+        for (var i = 0; i < routeList.length; i++) {
+            print('${i + 1}. ${routeList[i]}');
+        }
+        stdout.write('\n버스 노선 번호를 입력하세요 (1-${routeList.length}): ');
+        final routeInput = stdin.readLineSync()?.trim();
         
         print('\n사용 가능한 정류장:');
-        stationMap.keys.forEach((name) => print(name));
-        stdout.write('\n정류장명을 입력하세요: ');
-        final stationName = stdin.readLineSync();
+        var stationList = stationMap.keys.toList();
+        for (var i = 0; i < stationList.length; i++) {
+            print('${i + 1}. ${stationList[i]}');
+        }
+        stdout.write('\n정류장 번호를 입력하세요 (1-${stationList.length}): ');
+        final stationInput = stdin.readLineSync()?.trim();
         
         stdout.write('날짜를 입력하세요 (YYYY-MM-DD): ');
-        final date = stdin.readLineSync();
+        final date = stdin.readLineSync()?.trim();
         
-        if (routeName != null && stationName != null && date != null) {
-          final routeId = getRouteId(routeName);
-          final stationId = getStationId(stationName);
-          if (routeId != null && stationId != null) {
-            await client.getBusHistory(routeId, stationId, date);
-          } else {
-            print('올바르지 않은 버스 노선명 또는 정류장명입니다.');
-          }
+        if (routeInput != null && stationInput != null && date != null) {
+            final routeIndex = int.tryParse(routeInput);
+            final stationIndex = int.tryParse(stationInput);
+            
+            if (routeIndex != null && routeIndex >= 1 && routeIndex <= routeList.length &&
+                stationIndex != null && stationIndex >= 1 && stationIndex <= stationList.length) {
+                final routeName = routeList[routeIndex - 1];
+                final stationName = stationList[stationIndex - 1];
+                final routeId = getRouteId(routeName);
+                final stationId = getStationId(stationName);
+                
+                if (routeId != null && stationId != null) {
+                    await client.getBusHistory(routeId, stationId, date);
+                }
+            } else {
+                print('올바른 번호를 입력해주세요.');
+            }
         }
         break;
       case '8':
-        print('\n사용 가능한 정류장:');
-        stationMap.keys.forEach((name) => print(name));
-        stdout.write('\n정류장명을 입력하세요: ');
-        final stationName = stdin.readLineSync();
+         print('\n사용 가능한 정류장:');
+        var stationList = stationMap.keys.toList();
+        for (var i = 0; i < stationList.length; i++) {
+            print('${i + 1}. ${stationList[i]}');
+        }
+        stdout.write('\n정류장 번호를 입력하세요 (1-${stationList.length}): ');
+        final input = stdin.readLineSync()?.trim();
+        
         stdout.write('날짜를 입력하세요 (YYYY-MM-DD): ');
-        final date = stdin.readLineSync();
-        if (stationName != null && date != null) {
-          final stationId = getStationId(stationName);
-          if (stationId != null) {
-            await client.getTimeHistory(stationId, date);
-          } else {
-            print('올바르지 않은 정류장명입니다.');
-          }
+        final date = stdin.readLineSync()?.trim();
+        
+        if (input != null && date != null) {
+            final index = int.tryParse(input);
+            if (index != null && index >= 1 && index <= stationList.length) {
+                final stationName = stationList[index - 1];
+                final stationId = getStationId(stationName);
+                if (stationId != null) {
+                    await client.getTimeHistory(stationId, date);
+                }
+            } else {
+                print('올바른 번호를 입력해주세요 (1-${stationList.length}).');
+            }
         }
         break;
       case '9':

@@ -21,3 +21,4 @@ pubspec.lock
 *.log
 
 .env
+lib/config.dart
