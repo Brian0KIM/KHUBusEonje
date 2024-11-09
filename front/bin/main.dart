@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:bus_client/bus_client.dart';
 import 'package:bus_client/config.dart';
+import 'dart:convert';
 const Map<String, String> busRouteMap = {
   "9": "200000103",
   "1112": "234000016",
@@ -29,10 +30,11 @@ const Map<String, String> pathMap = {
 };
 String? getRouteId(String routeName) => busRouteMap[routeName];
 String? getStationId(String stationName) => stationMap[stationName];
-
+late final Map<String, dynamic> busCompanyData;
 void main() async {
   final client = BusClient();
-  
+  final file = File('./assets/data/bus_company.json');
+  busCompanyData = json.decode(await file.readAsString());
   while (true) {
     print('\n버스 정보 시스템');
     print('1. 로그인');
@@ -40,10 +42,11 @@ void main() async {
     print('3. 사용자 상태 확인');
     print('4. 버스 도착 정보');
     print('5. 정류장 도착 정보');
-    print('6. 정차 기록 확인');
+    print('6. 민원/정차 기록 확인');
     print('7. 버스별 운행 기록');
     print('8. 시간별 운행 기록');
-    print('9. 종료');
+    print('9. 민원 정보');
+    print('0. 종료');
     
     stdout.write('선택하세요: ');
     final choice = stdin.readLineSync();
@@ -182,6 +185,24 @@ void main() async {
         }
         break;
       case '9':
+        print('\n민원 가능한 버스 회사/기관:');
+        busCompanyData.forEach((key, value) {
+          print('$key. ${value['name']}');
+        });
+        
+        stdout.write('\n회사/기관 번호를 입력하세요 (1-${busCompanyData.length}): ');
+        final input = stdin.readLineSync()?.trim();
+        
+        if (input != null) {
+          final companyInfo = busCompanyData[input];
+          if (companyInfo != null) {
+            await client.displayCompanyInfo(companyInfo);
+          } else {
+            print('올바른 번호를 입력해주세요 (1-${busCompanyData.length}).');
+          }
+        }
+        break;
+      case '0':
         exit(0);
       default:
         print('잘못된 선택입니다.');

@@ -350,4 +350,29 @@ void dispose() {
     print('예상치 못한 오류: $e');
   }
 }
+Future<void> displayCompanyInfo(Map<String, dynamic> companyData) async {
+    print('\n회사 정보:');
+    print('회사명: ${companyData['name']}');
+    
+    if (companyData['phones'] != null) {
+      print('\n연락처:');
+      (companyData['phones'] as Map<String, dynamic>).forEach((key, value) {
+        print('$key: $value');
+      });
+    }
+    
+    if (companyData['address'] != null) {
+      print('\n주소: ${companyData['address']}');
+    }
+    
+    if (companyData['buses'] != null) {
+      print('\n운행 노선:');
+      final buses = companyData['buses'] as List;
+      buses.forEach((bus) => print('- $bus'));
+    }
+    
+    if (companyData['url'] != null && companyData['url'] != 'none') {
+      print('\n웹사이트: ${companyData['url']}');
+    }
+  }
 }
