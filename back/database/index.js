@@ -451,7 +451,8 @@ function mybusinfo(routeId, callback, ecallback) {
     const url = 'http://apis.data.go.kr/6410000/buslocationservice/getBusLocationList';
     const queryParams = '?' + encodeURIComponent('serviceKey') + '=' + serviceKey
         + '&' + encodeURIComponent('routeId') + '=' + encodeURIComponent(routeId);
-
+    const currentTime = new Date();
+    currentTime.setHours(currentTime.getHours() + 9); 
     request({
         url: url + queryParams,
         method: 'GET'
@@ -492,7 +493,7 @@ function mybusinfo(routeId, callback, ecallback) {
                     callback({
                         ok: true,
                         data: processedData,
-                        lastUpdate: new Date()
+                        lastUpdate: currentTime
                     });
                 } else {
                     ecallback('운행 중인 버스가 없습니다');
@@ -574,7 +575,7 @@ function getBusArrival(stationId, callback, ecallback) {
     const url = 'http://apis.data.go.kr/6410000/busarrivalservice/getBusArrivalList';
     const queryParams = '?' + encodeURIComponent('serviceKey') + '=' + serviceKey
         + '&' + encodeURIComponent('stationId') + '=' + encodeURIComponent(stationId);
-
+     
     request({
         url: url + queryParams,
         method: 'GET'
@@ -625,15 +626,16 @@ function getBusArrival(stationId, callback, ecallback) {
                     .filter(bus => bus !== null);
                 
                 processedData = [...processedData, ...specialBuses];
-
+                const currentTime = new Date();
+                currentTime.setHours(currentTime.getHours() + 9);
                 // 캐시 업데이트
                 busArrival.currentData[stationId] = processedData;
-                busArrival.lastUpdate = new Date();
+                busArrival.lastUpdate = currentTime;
 
                 callback({
                     ok: true,
                     data: processedData,
-                    lastUpdate: new Date()
+                    lastUpdate: currentTime
                 });
             } catch (e) {
                 console.error('데이터 처리 오류:', e.message, e.stack);
