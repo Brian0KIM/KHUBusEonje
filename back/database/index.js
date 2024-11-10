@@ -765,7 +765,7 @@ function startMonitoring() {
         monitorBusArrivals()
             .then(() => {
                 console.log('첫 모니터링 완료');
-                console.log('저장된 데이터:', getStoredPredictions());
+                console.log('key:',arrivalPredictions.data.keys());
             })
             .catch(error => {
                 console.error('모니터링 중 오류:', error);
@@ -776,7 +776,7 @@ function startMonitoring() {
             monitorBusArrivals()
                 .then(() => {
                     console.log('주기적 모니터링 완료');
-                    console.log('저장된 데이터:', getStoredPredictions());
+                    console.log('key:',arrivalPredictions.data.keys());
                 })
                 .catch(error => {
                     console.error('주기적 모니터링 중 오류:', error);

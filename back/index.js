@@ -29,8 +29,12 @@ const parser = new xml2js.Parser({ explicitArray: false }); // 배열을 단순�
 app.post('/user/login', (req, res) => {
     const id = req.body.id                         //로그인시 아이디
     const pw = req.body.pw                //로그인시 비밀번호
-
+    console.log('로그인 요청:', { id: req.body.id });
     database.login(id, pw, (data, cookie) => {
+        console.log('로그인 성공:', { 
+            name: data.name, 
+            id: data.id 
+        });
         database.setSession(data.id, data.name, cookie)
 
         //  login
@@ -76,7 +80,7 @@ app.post('/user/login', (req, res) => {
 app.post('/user/logout', (req, res) => {
     const id = req.body.id
     const cookie = req.body.cookie
-
+    console.log('로그아웃 요청:', { id: req.body.id });
     // 세션 유효성 검증
     const userSession = database.getUserSession(id);
     if (!userSession || !CheckSession(cookie, userSession.Cookie)) {
@@ -106,11 +110,13 @@ app.post('/user/logout', (req, res) => {
 
         // 세션 삭제
         database.logout(id, cookie, () => {
+            console.log('로그아웃 성공:', { id: req.body.id });
             res.json({
                 ok: true,
                 message: '로그아웃 성공'
             });
         }, (err) => {
+            console.error('로그아웃 실패:', err);
             res.status(500).json({
                 ok: false,
                 error: err
@@ -121,7 +127,7 @@ app.post('/user/logout', (req, res) => {
 app.get('/user/status', (req, res) => {
     const id = req.query.id;  // id는 쿼리로 받고
     const cookie = req.headers.authorization;  // 쿠키는 헤더로 받음
-    
+    console.log('사용자 상태 확인 요청:', { id: req.query.id });
     if (!id || !cookie) {
         res.status(400).json({
             ok: false,
@@ -139,7 +145,7 @@ app.get('/user/status', (req, res) => {
         });
         return;
     }
-
+    console.log('사용자 상태 확인 성공:', { id: req.query.id });
     // 쿠키 검증
     if (!CheckSession(cookie, userSession.Cookie)) {
         res.status(401).json({
@@ -148,7 +154,7 @@ app.get('/user/status', (req, res) => {
         });
         return;
     }
-
+    console.log('사용자 상태 확인 성공:', { id: req.query.id });
     res.json({
         ok: true,
         data: {
@@ -165,12 +171,17 @@ app.get('/user/status', (req, res) => {
 
 app.get('/bus/:routeId/eta', (req, res) => {
     const routeId = req.params.routeId || '233000031';  // busId -> routeId로 수정
-    
+    console.log('버스 도착 정보 요청:', { routeId: req.params.routeId });
     database.mybusinfo(routeId, 
         (data) => {
+            console.log('버스 도착 정보 응답:', { 
+                routeId: routeId,
+                busCount: data.data?.length || 0 
+            });
             res.json(data);
         },
         (error) => {
+            console.log('버스 도착 정보 조회 실패:', error);
             res.status(400).json({
                 ok: false,
                 error: error
@@ -182,12 +193,21 @@ app.get('/bus/:routeId/eta', (req, res) => {
 
 app.get('/stop/:stationId/eta', (req, res) => {
     const stationId = req.params.stationId;
-    
+    console.log('정류장 도착 정보 요청:', { 
+        stationId: req.params.stationId,
+        stationName: database.stationMap[req.params.stationId] 
+    });
     database.getBusArrival(stationId, 
         (data) => {
+            console.log('정류장 도착 정보 응답:', { 
+                stationId: req.params.stationId,
+                stationName: database.stationMap[req.params.stationId],
+                data: data
+            });
             res.json(data);
         },
         (error) => {
+            console.log('정류장 도착 정보 조회 실패:', error);
             res.status(400).json({
                 ok: false,
                 error: error
@@ -199,7 +219,10 @@ app.get('/stop/:stationId/eta', (req, res) => {
 app.get('/complain/:stationId/passedby', (req, res) => {
     const stationId = req.params.stationId;
     const predictions = database.getStoredPredictionsByStation(stationId);
-    
+    console.log('민원/정차 기록 확인 요청:', { 
+        stationId: req.params.stationId,
+        stationName: database.stationMap[req.params.stationId] 
+    });
     if (!predictions || predictions.length === 0) {
         res.status(404).json({
             ok: false,
@@ -207,7 +230,6 @@ app.get('/complain/:stationId/passedby', (req, res) => {
         });
         return;
     }
-
     res.json({
         ok: true,
         data: predictions
@@ -217,6 +239,11 @@ app.get('/complain/:stationId/passedby', (req, res) => {
 app.get('/bus/history/byBus', async (req, res) => {
     try {
         const { routeId, stationId, date } = req.query;
+        console.log('과거 버스 기록 조회 요청:', { 
+            routeId: req.query.routeId,
+            stationId: req.query.stationId,
+            date: req.query.date
+        });
         
         // 필수 파라미터 검증
         if (!routeId || !stationId || !date) {
@@ -242,6 +269,12 @@ app.get('/bus/history/byBus', async (req, res) => {
         }
 
         const result = await database.getPastBusArrival(routeId, stationId, staOrder, date, false);
+        console.log('과거 버스 기록 조회 응답:', { 
+            routeId: req.query.routeId,
+            stationId: req.query.stationId,
+            date: req.query.date,
+            data: result
+        });
         res.json(result);
 
     } catch (error) {
@@ -256,7 +289,10 @@ app.get('/bus/history/byBus', async (req, res) => {
 app.get('/bus/history/byTime', async (req, res) => {
     try {
         const { stationId, date } = req.query;
-        
+        console.log('과거 버스 기록 조회 요청:', { 
+            stationId: req.query.stationId,
+            date: req.query.date
+        });
         // 필수 파라미터 검증
         if (!stationId || !date) {
             return res.status(400).json({
@@ -298,12 +334,17 @@ app.get('/bus/history/byTime', async (req, res) => {
             const timeB = new Date(b.RArrivalDate);
             return timeA - timeB;
         });
-
+       
         res.json({
             ok: true,
             data: allResults,
             stationName: database.stationMap[stationId],
             lastUpdate: new Date()
+        });
+        console.log('과거 버스 기록 조회 응답:', { 
+            stationId: req.query.stationId,
+            date: req.query.date,
+            data: allResults
         });
 
     } catch (error) {

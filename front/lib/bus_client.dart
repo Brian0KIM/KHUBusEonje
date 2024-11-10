@@ -20,7 +20,7 @@ class BusClient {
     _dio = Dio(BaseOptions(
       baseUrl: baseUrl,
       connectTimeout: Duration(seconds: 5),
-      receiveTimeout: Duration(seconds: 3),
+      receiveTimeout: Duration(seconds: 5),
     ));
      if (!_isListening) {
       stdin.transform(utf8.decoder).listen((input) {
