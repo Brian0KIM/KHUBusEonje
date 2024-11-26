@@ -260,9 +260,9 @@ class UserInfoScreen extends StatelessWidget {
         url,
         headers: {
           'Content-Type': 'application/json',
-          'Cookie': cookie.join('; '),
         },
-        body: json.encode({'id': userId}),
+        body: json.encode({'id': userId,
+          'cookie': cookie.join('; ')}),
       );
 
       if (response.statusCode == 200) {
