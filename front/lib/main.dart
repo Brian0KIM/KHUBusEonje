@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:figma_to_flutter/figma_to_flutter.dart';
 import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 void main() {
   runApp(const MyApp());
@@ -33,39 +33,65 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _idController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+
   Future<void> _login() async {
     final String id = _idController.text.trim();
     final String password = _passwordController.text.trim();
-
     if (id.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('아이디와 비밀번호를 입력해주세요.')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('아이디와 비밀번호를 입력해주세요.')),
+        );
+      }
       return;
     }
 
     try {
-      final Uri url = Uri.parse('http://localhost:3000/login'); // API 주소
-      final response = await http.get(url, headers: {
-        'Content-Type': 'application/json',
-      });
+      final Uri url = Uri.parse('http://localhost:8081/user/login'); // 로그인 API 주소
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'id': id, 'pw': password}),
+      );
 
       if (response.statusCode == 200) {
-        // 성공 처리
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('로그인 성공!')),
-        );
+        final responseData = json.decode(response.body);
+        if (responseData['ok'] == true) {
+          final String userName = responseData['name'];
+          final String userId = responseData['id'];
+          final List<dynamic> cookie = responseData['cookie'];
+          if (mounted) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => NavigationBarScreen(
+                  userName: userName,
+                  userId: userId,
+                  cookie: cookie,
+                ),
+              ),
+            );
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('로그인 실패')),
+            );
+          }
+        }
       } else {
-        // 실패 처리
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('로그인 실패: ${response.body}')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('로그인 실패: ${response.body}')),
+          );
+        }
       }
     } catch (e) {
-      // 예외 처리
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('오류 발생: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('오류 발생: $e')),
+        );
+      }
     }
   }
 
@@ -148,3 +174,160 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
+
+class NavigationBarScreen extends StatefulWidget {
+  final String userName;
+  final String userId;
+  final List<dynamic> cookie;
+
+  const NavigationBarScreen({
+    super.key,
+    required this.userName,
+    required this.userId, required this.cookie,
+  });
+
+  @override
+  _NavigationBarScreenState createState() => _NavigationBarScreenState();
+}
+
+class _NavigationBarScreenState extends State<NavigationBarScreen> {
+  int _currentIndex = 3;
+
+  late final List<Widget> _pages;
+
+
+  @override
+  void initState() {
+    super.initState();
+    _pages = [
+      const Center(child: Text('홈 화면')),
+      const Center(child: Text('버스 화면')),
+      const Center(child: Text('지도 화면')),
+      UserInfoScreen(userName: widget.userName, userId: widget.userId, cookie: widget.cookie,),
+    ];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: _pages[_currentIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: '홈',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.directions_bus),
+            label: '버스',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.map),
+            label: '지도',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: '내 정보',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class UserInfoScreen extends StatelessWidget {
+  final String userName;
+  final String userId;
+  final List<dynamic> cookie;
+
+  const UserInfoScreen({
+    super.key,
+    required this.userName,
+    required this.userId,
+    required this.cookie,
+  });
+
+  Future<void> _logout(BuildContext context) async {
+    try {
+      final Uri url = Uri.parse('http://localhost:8081/user/logout'); // 로그아웃 API 주소
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cookie': cookie.join('; '),
+        },
+        body: json.encode({'id': userId}),
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+        if (responseData['ok'] == true) {
+          if (context.mounted) {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const LoginScreen()),
+                  (route) => false,
+            );
+          }
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('로그아웃 실패')),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('로그아웃 실패: ${response.body}')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('오류 발생: $e')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('내 정보'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.account_circle, size: 100, color: Colors.black54),
+            const SizedBox(height: 20),
+            Text(
+              userName,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              '학번: $userId',
+              style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 30),
+            ElevatedButton(
+              onPressed: () => _logout(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+              ),
+              child: const Text(
+                '로그아웃',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
