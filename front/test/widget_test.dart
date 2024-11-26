@@ -11,20 +11,24 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:front/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
+  testWidgets('Login screen test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
     await tester.pumpWidget(const MyApp());
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // Verify that the login screen is displayed.
+    expect(find.text('로그인'), findsOneWidget);
+    expect(find.text('아이디'), findsOneWidget);
+    expect(find.text('비밀번호'), findsOneWidget);
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
+    // Enter text into the text fields.
+    await tester.enterText(find.byType(TextField).at(0), 'test_id');
+    await tester.enterText(find.byType(TextField).at(1), 'test_password');
+
+    // Tap the login button.
+    await tester.tap(find.text('로그인'));
     await tester.pump();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Verify that the login request is made and the next screen is displayed.
+    // (This part may require mocking the HTTP request and response)
   });
 }
