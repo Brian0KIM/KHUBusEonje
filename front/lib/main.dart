@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:figma_to_flutter/figma_to_flutter.dart';
 import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 void main() {
   runApp(const MyApp());
@@ -33,39 +33,66 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _idController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+
   Future<void> _login() async {
     final String id = _idController.text.trim();
     final String password = _passwordController.text.trim();
-
     if (id.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('아이디와 비밀번호를 입력해주세요.')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('아이디와 비밀번호를 입력해주세요.')),
+        );
+      }
       return;
     }
 
     try {
-      final Uri url = Uri.parse('http://localhost:3000/login'); // API 주소
-      final response = await http.get(url, headers: {
-        'Content-Type': 'application/json',
-      });
+      //final Uri url = Uri.parse('http://10.0.2.2:8081/user/login');
+      final Uri url = Uri.parse('http://localhost:8081/user/login');// 로그인 API 주소
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'id': id, 'pw': password}),
+      );
 
       if (response.statusCode == 200) {
-        // 성공 처리
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('로그인 성공!')),
-        );
+        final responseData = json.decode(response.body);
+        if (responseData['ok'] == true) {
+          final String userName = responseData['name'];
+          final String userId = responseData['id'];
+          final List<dynamic> cookie = responseData['cookie'];
+          if (mounted) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => NavigationBarScreen(
+                  userName: userName,
+                  userId: userId,
+                  cookie: cookie,
+                ),
+              ),
+            );
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('로그인 실패')),
+            );
+          }
+        }
       } else {
-        // 실패 처리
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('로그인 실패: ${response.body}')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('로그인 실패: ${response.body}')),
+          );
+        }
       }
     } catch (e) {
-      // 예외 처리
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('오류 발생: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('오류 발생: $e')),
+        );
+      }
     }
   }
 
@@ -143,6 +170,404 @@ class _LoginScreenState extends State<LoginScreen> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class NavigationBarScreen extends StatefulWidget {
+  final String userName;
+  final String userId;
+  final List<dynamic> cookie;
+
+  const NavigationBarScreen({
+    super.key,
+    required this.userName,
+    required this.userId,
+    required this.cookie,
+  });
+
+  @override
+  _NavigationBarScreenState createState() => _NavigationBarScreenState();
+}
+
+class _NavigationBarScreenState extends State<NavigationBarScreen> {
+  int currentPageIndex = 4; // "내 정보" 화면이 기본 활성화 상태
+
+  late final List<Widget> _pages;
+
+  @override
+  void initState() {
+    super.initState();
+    _pages = [
+      const ComplaintServiceScreen(), // 민원 화면
+      const Center(child: Text('버스 화면')), // 버스 화면
+      const Center(child: Text('지도 화면')), // 지도 화면
+      const Center(child: Text("정류장 화면")), // 정류장 화면
+      UserInfoScreen(
+        userName: widget.userName,
+        userId: widget.userId,
+        cookie: widget.cookie,
+      ), // 내 정보 화면
+    ];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: _pages[currentPageIndex], // 현재 활성화된 화면
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: currentPageIndex,
+        onDestinationSelected: (int index) {
+          setState(() {
+            currentPageIndex = index;
+          });
+        },
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.warning_amber_rounded),
+            label: '민원',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.directions_bus),
+            label: '버스',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.map),
+            label: '지도',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.stop_circle_outlined),
+            label: '정류장',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person),
+            label: '내 정보',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+
+
+class UserInfoScreen extends StatelessWidget {
+  final String userName;
+  final String userId;
+  final List<dynamic> cookie;
+
+  const UserInfoScreen({
+    super.key,
+    required this.userName,
+    required this.userId,
+    required this.cookie,
+  });
+
+  Future<void> _logout(BuildContext context) async {
+    try {
+      //final Uri url = Uri.parse('http://10.0.2.2:8081/user/logout'); // 로그아웃 API 주소
+      final Uri url = Uri.parse('http://localhost:8081/user/logout');
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({'id': userId,
+          'cookie': cookie.join('; ')}),
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+        if (responseData['ok'] == true) {
+          if (context.mounted) {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const LoginScreen()),
+                  (route) => false,
+            );
+          }
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('로그아웃 실패')),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('로그아웃 실패: ${response.body}')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('오류 발생: $e')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('내 정보'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.account_circle, size: 100, color: Colors.black54),
+            const SizedBox(height: 20),
+            Text(
+              userName,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              '학번: $userId',
+              style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 30),
+            ElevatedButton(
+              onPressed: () => _logout(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+              ),
+              child: const Text(
+                '로그아웃',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class ComplaintServiceScreen extends StatelessWidget {
+  const ComplaintServiceScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            // 뒤로가기 동작
+          },
+        ),
+        title: const Text('민원 도우미 서비스'),
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              _buildBusInfoCard(
+                companyName: "용남고속",
+                routes: "9 | 5100 | 7000",
+                stopInfo: "교내 정류장 존재",
+                phone: "031-273-8335",
+              ),
+              const SizedBox(height: 10),
+              _buildBusInfoCard(
+                companyName: "대원고속",
+                routes: "1112 | 1560(A,B)",
+                stopInfo: "1112: 교내 정류장 존재\n1560: 교내 정류장 없음",
+                phone: "031-204-6657",
+              ),
+              const SizedBox(height: 10),
+              _buildBusInfoCard(
+                companyName: "경기고속",
+                routes: "M5107",
+                stopInfo: "교내 정류장 없음",
+                phone: "031-206-1570",
+              ),
+              const SizedBox(height: 10),
+              _buildGeneralInfoCard(
+                title: "경기도 버스 민원",
+                phone1: "031-120",
+                phone2: "031-246-4211",
+                button1Text: "경기도청-버스불편신고",
+                button2Text: "경기도버스운송조합",
+              ),
+              const SizedBox(height: 10),
+              _buildGeneralInfoCard(
+                title: "경희대학교",
+                phone1: "031-201-2004",
+                phone2: "031-201-3051~4",
+                button1Text: "경희옴부즈민원",
+                button2Text: "학생지원센터",
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBusInfoCard({
+    required String companyName,
+    required String routes,
+    required String stopInfo,
+    required String phone,
+  }) {
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.0),
+        side: const BorderSide(color: Colors.lightBlue, width: 2), // 하늘색 테두리
+      ),
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  companyName,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                const Icon(Icons.directions_bus, size: 18),
+                const Spacer(),
+                Row(
+                  children: [
+                    const Icon(Icons.phone, size: 16, color: Colors.black),
+                    const SizedBox(width: 5),
+                    Text(
+                      phone,
+                      style: const TextStyle(fontSize: 14, color: Colors.black),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              routes,
+              style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                const Icon(Icons.location_on, size: 16),
+                const SizedBox(width: 5),
+                Expanded(
+                  child: Text(
+                    stopInfo,
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.lightBlue,
+                    side: const BorderSide(color: Colors.lightBlue),
+                  ),
+                  onPressed: () {
+                    // 회사 정보 보기 버튼 동작
+                  },
+                  child: const Text('회사 정보 보기'),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue, // 버튼 배경색
+                    foregroundColor: Colors.white, // 버튼 텍스트 색상
+                  ),
+                  onPressed: () {
+                    // 방금 지나간 버스 버튼 동작
+                  },
+                  child: const Text('방금 지나간 버스'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGeneralInfoCard({
+    required String title,
+    required String phone1,
+    required String phone2,
+    required String button1Text,
+    required String button2Text,
+  }) {
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.0),
+        side: const BorderSide(color: Colors.lightBlue, width: 2), // 하늘색 테두리
+      ),
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                const Icon(Icons.phone, size: 16),
+                const SizedBox(width: 5),
+                Text(
+                  phone1,
+                  style: const TextStyle(fontSize: 14),
+                ),
+                const Spacer(),
+                const Icon(Icons.phone, size: 16),
+                const SizedBox(width: 5),
+                Text(
+                  phone2,
+                  style: const TextStyle(fontSize: 14),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.lightBlue,
+                    side: const BorderSide(color: Colors.lightBlue),
+                  ),
+                  onPressed: () {
+                    // 첫 번째 버튼 동작
+                  },
+                  child: Text(button1Text),
+                ),
+                OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.lightBlue,
+                    side: const BorderSide(color: Colors.lightBlue),
+                  ),
+                  onPressed: () {
+                    // 두 번째 버튼 동작
+                  },
+                  child: Text(button2Text),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
