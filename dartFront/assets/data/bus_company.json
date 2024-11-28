@@ -60,5 +60,13 @@
             "서울캠퍼스감사팀":"02-961-2360"
         },
         "url":"http://ombuds.khu.ac.kr/html_2013/02/01.php"
+    },
+    "7":
+    {
+        "name":"경희대학교학생지원센터",
+        "phones":{
+            "국제캠퍼스":"031-201-3051~4"
+        },
+        "url":"https://www.khu.ac.kr/kor/user/contents/view.do?menuNo=200172"
     }
 }
