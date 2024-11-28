@@ -869,7 +869,7 @@ function getStaOrder(stationId, routeId) {
 }
 
 let lastApiCall = null;
-const API_CALL_INTERVAL = 5000; // 5초
+const API_CALL_INTERVAL = 1000; // 5초
 
 // 캐시 파일 경로
 const CACHE_FILE_PATH = path.join(__dirname, 'pastBusCache.json');

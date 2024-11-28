@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'busCompany.dart';
+import 'bus_company.dart';
+import "bus_info.dart";
+import "passed_bus_page.dart";
 void main() {
   runApp(const MyApp());
 }
@@ -26,7 +28,7 @@ class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
@@ -189,7 +191,7 @@ class NavigationBarScreen extends StatefulWidget {
   });
 
   @override
-  _NavigationBarScreenState createState() => _NavigationBarScreenState();
+  State<NavigationBarScreen> createState() => _NavigationBarScreenState();
 }
 
 class _NavigationBarScreenState extends State<NavigationBarScreen> {
@@ -513,6 +515,12 @@ class ComplaintServiceScreen extends StatelessWidget {
                   ),
                   onPressed: () {
                     // 방금 지나간 버스 버튼 동작
+                     Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const PassedBusPage(),
+                      ),
+                    );
                   },
                   child: const Text('방금 지나간 버스'),
                 ),
