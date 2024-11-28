@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
+import 'busCompany.dart';
 void main() {
   runApp(const MyApp());
 }
@@ -369,6 +369,7 @@ class ComplaintServiceScreen extends StatelessWidget {
                 routes: "9 | 5100 | 7000",
                 stopInfo: "교내 정류장 존재",
                 phone: "031-273-8335",
+                context: context,
               ),
               const SizedBox(height: 10),
               _buildBusInfoCard(
@@ -376,6 +377,7 @@ class ComplaintServiceScreen extends StatelessWidget {
                 routes: "1112 | 1560(A,B)",
                 stopInfo: "1112: 교내 정류장 존재\n1560: 교내 정류장 없음",
                 phone: "031-204-6657",
+                context: context,
               ),
               const SizedBox(height: 10),
               _buildBusInfoCard(
@@ -383,6 +385,7 @@ class ComplaintServiceScreen extends StatelessWidget {
                 routes: "M5107",
                 stopInfo: "교내 정류장 없음",
                 phone: "031-206-1570",
+                context: context,
               ),
               const SizedBox(height: 10),
               _buildGeneralInfoCard(
@@ -391,6 +394,7 @@ class ComplaintServiceScreen extends StatelessWidget {
                 phone2: "031-246-4211",
                 button1Text: "경기도청-버스불편신고",
                 button2Text: "경기도버스운송조합",
+                context: context,
               ),
               const SizedBox(height: 10),
               _buildGeneralInfoCard(
@@ -399,6 +403,7 @@ class ComplaintServiceScreen extends StatelessWidget {
                 phone2: "031-201-3051~4",
                 button1Text: "경희옴부즈민원",
                 button2Text: "학생지원센터",
+                context: context,
               ),
             ],
           ),
@@ -412,7 +417,20 @@ class ComplaintServiceScreen extends StatelessWidget {
     required String routes,
     required String stopInfo,
     required String phone,
+    required BuildContext context,
   }) {
+    String getCompanyId() {
+    switch (companyName) {
+      case "용남고속":
+        return "1";
+      case "대원고속":
+        return "2";
+      case "경기고속":
+        return "3";
+      default:
+        return "1";
+    }
+    }
     return Card(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12.0),
@@ -477,6 +495,14 @@ class ComplaintServiceScreen extends StatelessWidget {
                   ),
                   onPressed: () {
                     // 회사 정보 보기 버튼 동작
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CompanyInfoPage(
+                          companyId: getCompanyId(),
+                        ),
+                      ),
+                    );
                   },
                   child: const Text('회사 정보 보기'),
                 ),
@@ -504,7 +530,22 @@ class ComplaintServiceScreen extends StatelessWidget {
     required String phone2,
     required String button1Text,
     required String button2Text,
+    required BuildContext context,
   }) {
+    String getCompanyId(String buttonText) {
+    switch (buttonText) {
+      case "경기도청-버스불편신고":
+        return "4";
+      case "경기도버스운송조합":
+        return "5";
+      case "경희옴부즈민원":
+        return "6";
+      case "학생지원센터":
+        return "7";
+      default:
+        return "4";
+    }
+    }
     return Card(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12.0),
@@ -551,7 +592,15 @@ class ComplaintServiceScreen extends StatelessWidget {
                     side: const BorderSide(color: Colors.lightBlue),
                   ),
                   onPressed: () {
-                    // 첫 번째 버튼 동작
+                    // 회사 정보 페이지로 이동
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CompanyInfoPage(
+                          companyId: getCompanyId(button1Text),
+                        ),
+                      ),
+                    );
                   },
                   child: Text(button1Text),
                 ),
@@ -562,6 +611,14 @@ class ComplaintServiceScreen extends StatelessWidget {
                   ),
                   onPressed: () {
                     // 두 번째 버튼 동작
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CompanyInfoPage(
+                          companyId: getCompanyId(button2Text),
+                        ),
+                      ),
+                    );
                   },
                   child: Text(button2Text),
                 ),
@@ -571,5 +628,109 @@ class ComplaintServiceScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+class CompanyInfoPage extends StatelessWidget {
+  final String companyId;
+
+  const CompanyInfoPage({super.key, required this.companyId});
+
+  @override
+  Widget build(BuildContext context) {
+    final company = companyData[companyId];
+    
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text('${company['name']} 서비스'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              '회사 정보',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey,
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildInfoCard(company),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoCard(Map<String, dynamic> company) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        children: [
+          _buildInfoItem(
+            icon: Icons.link,
+            title: '웹사이트 주소',
+            content: company['url'] ?? 'none',
+          ),
+          _buildDivider(),
+          _buildInfoItem(
+            icon: Icons.phone,
+            title: '전화번호',
+            content: _formatPhones(company['phones']),
+          ),
+          if (company['address'] != null) ...[
+            _buildDivider(),
+            _buildInfoItem(
+              icon: Icons.home,
+              title: '주소',
+              content: company['address'],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoItem({
+    required IconData icon,
+    required String title,
+    required String content,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 24, color: Colors.black54),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(content),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return const Divider(height: 1, thickness: 1);
+  }
+
+  String _formatPhones(Map<String, dynamic> phones) {
+    return phones.entries
+        .map((e) => '${e.key}: ${e.value}')
+        .join('\n');
   }
 }
