@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'station_bus_info_page.dart';
+import 'bus_info.dart';
 
 class StationScreen extends StatefulWidget {
   const StationScreen({super.key});
@@ -13,16 +15,16 @@ class _StationScreenState extends State<StationScreen> {
   // 정류장 데이터
   final Map<String, List<Map<String, String>>> stationData = {
     'ascending': [ // 정문 방향
-      {'name': '사색의 광장', 'description': 'ⓘ 정문 방향(29059)'},
-      {'name': '생명과학대.산업대학', 'description': 'ⓘ 정문 방향(29050)'},
-      {'name': '경희대체육대학.외대', 'description': 'ⓘ 정문 방향(29044)'},
-      {'name': '경희대학교(정건)', 'description': 'ⓘ 정문 방향(04241)'},
+      {'name': '사색의광장(정문행)', 'description': 'ⓘ 정문 방향(29059)'},
+      {'name': '생명과학대.산업대학(정문행)', 'description': 'ⓘ 정문 방향(29050)'},
+      {'name': '경희대체육대학.외대(정문행)', 'description': 'ⓘ 정문 방향(29044)'},
+      {'name': '경희대학교(정문행)', 'description': 'ⓘ 정문 방향(04241)'},
     ],
     'descending': [ // 사색 방향
-      {'name': '경희대정문', 'description': 'ⓘ 사색 방향(29038)'},
-      {'name': '외국어대학', 'description': 'ⓘ 사색 방향(29040)'},
-      {'name': '생명과학대', 'description': 'ⓘ 사색 방향(29049)'},
-      {'name': '사색의광장', 'description': 'ⓘ 사색 방향(29057)'},
+      {'name': '경희대정문(사색행)', 'description': 'ⓘ 사색 방향(29038)'},
+      {'name': '외국어대학(사색행)', 'description': 'ⓘ 사색 방향(29040)'},
+      {'name': '생명과학대(사색행)', 'description': 'ⓘ 사색 방향(29049)'},
+      {'name': '사색의광장(사색행)', 'description': 'ⓘ 사색 방향(29057)'},
     ],
   };
 
@@ -178,6 +180,15 @@ class _StationScreenState extends State<StationScreen> {
                                       ),
                                       onPressed: () {
                                         // TODO: 버스 도착 정보 조회 기능 구현
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => StationBusInfoPage(
+                                              stationId: stationMap[station['name']]!,
+                                              stationName: station['name']!,
+                                            ),
+                                          ),
+                                        );
                                       },
                                       child: const Text('버스 도착 정보 조회'),
                                     ),
