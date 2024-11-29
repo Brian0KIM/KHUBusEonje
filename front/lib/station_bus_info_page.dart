@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'bus_info.dart';
+import 'dart:async';
 
 
 class StationBusInfoPage extends StatefulWidget {
@@ -22,6 +23,7 @@ class StationBusInfoPage extends StatefulWidget {
 class _StationBusInfoPageState extends State<StationBusInfoPage> {
   List<dynamic> busData = [];
   bool isLoading = false;
+  Timer? _timer;
   final Map<String, int> busPriority = {
     "9": 0,
     "1112": 1,
@@ -36,6 +38,14 @@ class _StationBusInfoPageState extends State<StationBusInfoPage> {
   void initState() {
     super.initState();
     fetchBusData();
+    _timer = Timer.periodic(const Duration(seconds: 15), (timer) {
+      fetchBusData();
+    });
+  }
+  @override
+  void dispose() {
+    _timer?.cancel(); // 페이지 dispose 시 타이머 취소
+    super.dispose();
   }
   int calculateRemaining(String? totalStr, String? locationStr) {
   if (totalStr == null || locationStr == null) return 0;
@@ -110,12 +120,34 @@ class _StationBusInfoPageState extends State<StationBusInfoPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  widget.stationName,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      widget.stationName,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.grey.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(
+                          Icons.refresh,
+                          size: 28,
+                        ),
+                        onPressed: isLoading ? null : () => fetchBusData(),
+                        style: IconButton.styleFrom(
+                          foregroundColor: Colors.blue,
+                          padding: const EdgeInsets.all(8),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const Text(
                   '버스 도착 정보 조회',
@@ -140,23 +172,41 @@ class _StationBusInfoPageState extends State<StationBusInfoPage> {
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : busData.isEmpty || !availableRoutes.any((route) => busPriority.containsKey(route))
-                    ? Center(
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[200],
-                          borderRadius: BorderRadius.circular(8),
+                      ?  Card(
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 16.0,
+                          vertical: 8.0,
                         ),
-                        child: const Text(
-                          '도착 예정 정보 없음',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey,
-                            fontWeight: FontWeight.bold,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(
+                            color: Colors.grey[800]!,
+                            width: 2,
                           ),
                         ),
-                      ),
-                    )
+                        child: const Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.info_outline,
+                                color: Colors.grey,
+                                size: 24,
+                              ),
+                              SizedBox(width: 12),
+                              Text(
+                                '도착 예정 정보 없음',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
                     : ListView.builder(
                         itemCount: busData.length,
                         itemBuilder: (context, index) {
