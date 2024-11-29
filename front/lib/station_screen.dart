@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'station_bus_info_page.dart';
 import 'bus_info.dart';
+import 'station_bus_list_page.dart';
 
 class StationScreen extends StatefulWidget {
   const StationScreen({super.key});
@@ -166,7 +167,16 @@ class _StationScreenState extends State<StationScreen> {
                                         side: const BorderSide(color: Colors.lightBlue),
                                       ),
                                       onPressed: () {
-                                        // TODO: 버스 도착 예정 시간 기능 구현
+                                        //과거 도착 시간 기능 구현
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => StationBusListPage(
+                                              stationId: stationMap[station['name']]!,
+                                              stationName: station['name']!,
+                                            ),
+                                          ),
+                                        );
                                       },
                                       child: const Text('과거 도착 시간'),
                                     ),
@@ -179,7 +189,7 @@ class _StationScreenState extends State<StationScreen> {
                                         foregroundColor: Colors.white,
                                       ),
                                       onPressed: () {
-                                        // TODO: 버스 도착 정보 조회 기능 구현
+                                        //버스 도착 정보 조회 기능 구현
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
