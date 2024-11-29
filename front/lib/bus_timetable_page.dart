@@ -24,14 +24,21 @@ class BusTimeTablePage extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                Icon(
+                  Icons.directions_bus,
+                  size: 32,
+                  color: getBusColor(routeNumber),
+                ),  
+                const SizedBox(width: 8),
                 Text(
                   routeNumber,
-                  style: const TextStyle(
-                    fontSize: 24,
+                  style: TextStyle(
+                    fontSize: 32,
                     fontWeight: FontWeight.bold,
+                    color: getBusColor(routeNumber),
                   ),
                 ),
               ],
@@ -92,5 +99,26 @@ class BusTimeTablePage extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+Color getBusColor(String routeNumber) {
+  switch (routeNumber) {
+    case "9":
+      return const Color(0xff33CC99); // 지선버스
+    case "1112":
+      return const Color(0xffE60012); // 지선버스
+    case "5100":
+      return const Color(0xffE60012); // 광역버스
+    case "7000":
+      return const Color(0xffE60012); // 광역버스
+    case "M5107":
+      return const Color(0xff006896); // M버스
+    case "1560A":
+      return const Color(0xffE60012); // 지선버스
+    case "1560B":
+      return const Color(0xffE60012); // 지선버스
+    default:
+      return Colors.black;
   }
 }

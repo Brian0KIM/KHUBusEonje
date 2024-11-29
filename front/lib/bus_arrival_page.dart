@@ -69,10 +69,33 @@ class _BusArrivalPageState extends State<BusArrivalPage> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text('${widget.routeNumber}번 버스'),
+        title: const Text('버스 도착 정보'),
       ),
       body: Column(
         children: [
+          Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.directions_bus,
+                size: 32,
+                color: getBusColor(widget.routeNumber),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                '${widget.routeNumber}번',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: getBusColor(widget.routeNumber),
+                ),
+              ),
+              ],
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: SegmentedButton<bool>(
@@ -117,6 +140,14 @@ class _BusArrivalPageState extends State<BusArrivalPage> {
                           final currentStation = int.parse(bus['stationSeq']);
                           final remainingStations = totalStations - currentStation;
                           
+                          // 잔여 좌석 텍스트 조건부 생성
+                          String remainingSeatText = '';
+                          if (bus['remainSeatCnt'] != '-1') {
+                            remainingSeatText = '잔여: ${bus['remainSeatCnt']} 석';
+                          } else {
+                            remainingSeatText = '잔여: 정보없음';
+                          }
+    
                           return Card(
                             margin: const EdgeInsets.symmetric(
                               horizontal: 16.0,
@@ -135,7 +166,7 @@ class _BusArrivalPageState extends State<BusArrivalPage> {
                                     children: [
                                       Icon(
                                         Icons.directions_bus,
-                                        color: Colors.blue,
+                                        color: getBusColor(widget.routeNumber),
                                         size: 24,
                                       ),
                                       const SizedBox(width: 8),
@@ -143,17 +174,57 @@ class _BusArrivalPageState extends State<BusArrivalPage> {
                                         "${bus['stationName']}",
                                         style: const TextStyle(
                                           fontWeight: FontWeight.bold,
+                                          fontSize: 16,
                                         ),
                                       ),
                                     ],
                                   ),
                                   const SizedBox(height: 8),
-                                  Text(
-                                    '${bus['plateNo']}\n'
-                                    '기점에서 ${bus['stationSeq']}째 정류장\n'
-                                    '${"종점(사색의광장)"}까지: $remainingStations 전\n'
-                                    '잔여: ${bus['remainSeatCnt']} 석',
-                                    style: const TextStyle(fontSize: 14),
+                                  RichText(
+                                    text: TextSpan(
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.black,
+                                      ),
+                                      children: [
+                                        TextSpan(
+                                          text: '${bus['plateNo']}\n',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const TextSpan(text: '기점에서 '),
+                                        TextSpan(
+                                          text: '${bus['stationSeq']}',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const TextSpan(text: '째 정류장\n'),
+                                        const TextSpan(
+                                          text: '사색의광장',
+                                        ),
+                                        const TextSpan(text: '까지: '),
+                                        TextSpan(
+                                          text: '$remainingStations',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const TextSpan(text: ' 전\n'),
+                                        if (bus['remainSeatCnt'] != '-1') ...[
+                                          const TextSpan(text: '잔여: '),
+                                          TextSpan(
+                                            text: '${bus['remainSeatCnt']}',
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          const TextSpan(text: ' 석'),
+                                        ] else
+                                          const TextSpan(text: '잔여: 정보없음'),
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),
@@ -165,5 +236,25 @@ class _BusArrivalPageState extends State<BusArrivalPage> {
         ],
       ),
     );
+  }
+}
+Color getBusColor(String routeNumber) {
+  switch (routeNumber) {
+    case "9":
+      return const Color(0xff33CC99); // 지선버스
+    case "1112":
+      return const Color(0xffE60012); // 지선버스
+    case "5100":
+      return const Color(0xffE60012); // 광역버스
+    case "7000":
+      return const Color(0xffE60012); // 광역버스
+    case "M5107":
+      return const Color(0xff006896); // M버스
+    case "1560A":
+      return const Color(0xffE60012); // 지선버스
+    case "1560B":
+      return const Color(0xffE60012); // 지선버스
+    default:
+      return Colors.black;
   }
 }
