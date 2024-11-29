@@ -5,6 +5,7 @@ import 'bus_company.dart';
 import "bus_info.dart";
 import "passed_bus_page.dart";
 import "bus_screen.dart";
+import "station_screen.dart";
 void main() {
   runApp(const MyApp());
 }
@@ -207,7 +208,7 @@ class _NavigationBarScreenState extends State<NavigationBarScreen> {
       const ComplaintServiceScreen(), // 민원 화면
       const BusScreen(), // 버스 화면
       const Center(child: Text('지도 화면')), // 지도 화면
-      const Center(child: Text("정류장 화면")), // 정류장 화면
+      const StationScreen(), // 정류장 화면
       UserInfoScreen(
         userName: widget.userName,
         userId: widget.userId,
