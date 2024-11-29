@@ -312,6 +312,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.4.4"
+  no_context_navigation:
+    dependency: "direct main"
+    description:
+      name: no_context_navigation
+      sha256: ad0736853864a6c0107ea5a35297884b27a99bd1a4abf7763004fe01a4327b59
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.0.0"
   package_config:
     dependency: transitive
     description:

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'bus_timetable_page.dart';
 class BusScreen extends StatelessWidget {
   const BusScreen({super.key});
 
@@ -41,41 +42,48 @@ class BusScreen extends StatelessWidget {
                 routeNumber: "9",
                 operationTime: "기점 평일 06:30~22:50, 주말 06:30~22:50",
                 routeInfo: "사색의광장<->금곡LG1단지.와이씨티6단지)",
+                context: context,
               ),
               const SizedBox(height: 10),
               _buildBusRouteCard(
                 routeNumber: "1112",
                 operationTime: "기점 평일 04:40~22:30, 주말 04:40~22:30",
                 routeInfo: "사색의광장<->테크노마트앞.강변역(C)",
+                context: context,
               ),
               const SizedBox(height: 10),
               _buildBusRouteCard(
                 routeNumber: "5100",
                 operationTime: "기점 평일 05:30~00:10, 주말 05:30~23:20",
                 routeInfo: "사색의광장<->신분당선강남역(중)",
+                context: context,
               ),
               const SizedBox(height: 10),
               _buildBusRouteCard(
                 routeNumber: "7000",
                 operationTime: "기점 평일 05:30~00:00, 주말 05:30~23:30",
                 routeInfo: "사색의광장<->사당역4번출구",
+                context: context,
               ),
               const SizedBox(height: 10),
               _buildBusRouteCard(
                 routeNumber: "M5107",
                 operationTime: "기점 평일 05:00~23:00, 주말 05:00~23:00",
                 routeInfo: "경희대학교<->서울역버스환승센터(6번승강장)(중)",
+                context: context,
               ),
               const SizedBox(height: 10),
               _buildBusRouteCard(
                 routeNumber: "1560A",
                 operationTime: "기점 평일 05:30~11:30, 주말 05:00~11:20",
                 routeInfo: "경희대학교<->신분당선강남역(중)",
+                context: context,
               ),
               _buildBusRouteCard(
                 routeNumber: "1560B",
                 operationTime: "기점 평일 11:50~22:30, 주말 11:50~22:30",
                 routeInfo: "경희대학교<->신분당선강남역(중)",
+                context: context,
               ),
             ],
           ),
@@ -88,6 +96,7 @@ class BusScreen extends StatelessWidget {
     required String routeNumber,
     required String operationTime,
     required String routeInfo,
+    required BuildContext context,
   }) {
     return Card(
       shape: RoundedRectangleBorder(
@@ -154,7 +163,14 @@ class BusScreen extends StatelessWidget {
                     side: const BorderSide(color: Colors.lightBlue),
                   ),
                   onPressed: () {
-                    // 버스 시간표 조회 기능 구현
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => BusTimeTablePage(
+                          routeNumber: routeNumber,
+                        ),
+                      ),
+                    ); // 버스 시간표 조회 기능 구현
                   },
                   child: const Text('버스 시간표 조회'),
                 ),

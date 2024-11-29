@@ -797,7 +797,7 @@ function stopMonitoring() {
 }
 
 // 서버 시작 시 모니터링 시작
-startMonitoring();
+//startMonitoring();
 
 // 저장된 데이터 조회 함수
 function getStoredPredictions() {
