@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../bus_info.dart';
+import 'dart:async';
 
 class BusArrivalPage extends StatefulWidget {
   final String routeNumber;
@@ -18,15 +19,24 @@ class BusArrivalPage extends StatefulWidget {
 class _BusArrivalPageState extends State<BusArrivalPage> {
   List<dynamic> busData = [];
   bool isLoading = false;
-  bool isAscending = true; // true: 정문방향(오름차순), false: 사색방향(내림차순)
-
+  bool isAscending = true;// true: 정문방향(오름차순), false: 사색방향(내림차순)
+  Timer? _timer;
   @override
   void initState() {
     super.initState();
     fetchBusData();
+     // 15초마다 자동 업데이트
+    _timer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      fetchBusData();
+    });
   }
-
+  @override
+    void dispose() {
+      _timer?.cancel(); // 페이지를 나갈 때 타이머 취소
+      super.dispose();
+    }
   Future<void> fetchBusData() async {
+    if (isLoading) return;
     setState(() {
       isLoading = true;
     });
@@ -98,33 +108,72 @@ class _BusArrivalPageState extends State<BusArrivalPage> {
           ),
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: SegmentedButton<bool>(
-              segments: const [
-                ButtonSegment<bool>(
-                  value: true,
-                  label: Text("정문 방향"),
-                ),
-                ButtonSegment<bool>(
-                  value: false,
-                  label: Text("사색 방향"),
-                ),
-              ],
-              selected: {isAscending},
-              onSelectionChanged: (Set<bool> newSelection) {
-                setState(() {
-                  isAscending = newSelection.first;
-                  busData.sort((a, b) => isAscending
-                      ? int.parse(a['stationSeq']).compareTo(int.parse(b['stationSeq']))
-                      : int.parse(b['stationSeq']).compareTo(int.parse(a['stationSeq'])));
-                });
-              },
-              style: ButtonStyle(
-                side: WidgetStateProperty.all(
-                  const BorderSide(color: Colors.blue),
-                ),
-              ),
+            child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    // 중앙에 SegmentedButton 배치
+                    Center(
+                      child: SegmentedButton<bool>(
+                        segments: const [
+                          ButtonSegment<bool>(
+                            value: true,
+                            label: Text("정문 방향",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                            ),
+                          ),
+                          ButtonSegment<bool>(
+                            value: false,
+                            label: Text("사색 방향",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                            ),
+                          ),
+                        ],
+                        selected: {isAscending},
+                        onSelectionChanged: (Set<bool> newSelection) {
+                          setState(() {
+                            isAscending = newSelection.first;
+                            busData.sort((a, b) => isAscending
+                                ? int.parse(a['stationSeq']).compareTo(int.parse(b['stationSeq']))
+                                : int.parse(b['stationSeq']).compareTo(int.parse(a['stationSeq'])));
+                          });
+                        },
+                        style: ButtonStyle(
+                          side: WidgetStateProperty.all(
+                            const BorderSide(color: Colors.blue),
+                          ),
+                        ),
+                      ),
+                    ),
+                    // 오른쪽에 새로고침 버튼 배치
+                    Positioned(
+                      right: 0,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: IconButton(
+                          icon: const Icon(
+                            Icons.refresh,
+                            size: 28,  // 아이콘 크기 증가
+                          ),
+                          onPressed: isLoading ? null : () => fetchBusData(),
+                          style: IconButton.styleFrom(
+                            foregroundColor: Colors.blue,
+                            padding: const EdgeInsets.all(8),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
             ),
-          ),
+          ),  
           Expanded(
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
