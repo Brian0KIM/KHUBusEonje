@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'bus_timetable_page.dart';
+import 'bus_arrival_page.dart';
 class BusScreen extends StatelessWidget {
   const BusScreen({super.key});
 
@@ -181,6 +182,14 @@ class BusScreen extends StatelessWidget {
                   ),
                   onPressed: () {
                     // 버스 도착 정보 조회 기능 구현
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => BusArrivalPage(
+                          routeNumber: routeNumber,
+                        ),
+                      ),
+                    );
                   },
                   child: const Text('버스 도착 정보 조회'),
                 ),
