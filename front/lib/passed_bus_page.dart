@@ -78,6 +78,7 @@ class _PassedBusPageState extends State<PassedBusPage> {
                       value: "203000125",
                       label: Text("정문방향"),
                     ),
+                    
                   ],
                   selected: {currentStationId},
                   onSelectionChanged: (Set<String> newSelection) {
@@ -86,6 +87,11 @@ class _PassedBusPageState extends State<PassedBusPage> {
                     });
                     fetchBusData();
                   },
+                  style: ButtonStyle(
+                      side: WidgetStateProperty.all(
+                      const BorderSide(color: Colors.blue),
+                    ),
+  ),
                 ),
               ],
             ),
@@ -97,18 +103,18 @@ class _PassedBusPageState extends State<PassedBusPage> {
                     itemCount: busData.length,
                     itemBuilder: (context, index) {
                       final bus = busData[index];
-                      final expectedArrival = DateTime.parse(bus['expectedArrival']).toLocal();
-                      
+                      final expectedArrival = DateTime.parse(bus['expectedArrival']); 
+                      final formattedTime = '${expectedArrival.hour.toString().padLeft(2, '0')}:${expectedArrival.minute.toString().padLeft(2, '0')}';
                       return Card(
                         margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                         child: ListTile(
-                          leading: const Icon(Icons.check, color: Colors.blue),
+                          leading: const Icon(Icons.directions_bus, color: Colors.blue),
                           title: Text(
                             bus['routeName'],
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                           subtitle: Text(
-                            '${bus['plateNo']}\n${expectedArrival.hour}:${expectedArrival.minute.toString().padLeft(2, '0')} 도착 예정',
+                            '${bus['plateNo']}\n$formattedTime 도착 예정',
                           ),
                         ),
                       );

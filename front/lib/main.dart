@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'bus_company.dart';
 import "bus_info.dart";
 import "passed_bus_page.dart";
+import "bus_screen.dart";
 void main() {
   runApp(const MyApp());
 }
@@ -204,7 +205,7 @@ class _NavigationBarScreenState extends State<NavigationBarScreen> {
     super.initState();
     _pages = [
       const ComplaintServiceScreen(), // 민원 화면
-      const Center(child: Text('버스 화면')), // 버스 화면
+      const BusScreen(), // 버스 화면
       const Center(child: Text('지도 화면')), // 지도 화면
       const Center(child: Text("정류장 화면")), // 정류장 화면
       UserInfoScreen(
@@ -653,7 +654,7 @@ class CompanyInfoPage extends StatelessWidget {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text('${company['name']} 서비스'),
+        title: Text('${company['name']}'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
