@@ -13,16 +13,16 @@ class _StationScreenState extends State<StationScreen> {
   // 정류장 데이터
   final Map<String, List<Map<String, String>>> stationData = {
     'ascending': [ // 정문 방향
-      {'name': '사색의 광장', 'description': ''},
-      {'name': '생명과학대.산업대학', 'description': '정문행'},
-      {'name': '경희대체육대학.외대', 'description': '정문행'},
-      {'name': '경희대학교(정건)', 'description': '정문행'},
+      {'name': '사색의 광장', 'description': 'ⓘ 정문 방향(29059)'},
+      {'name': '생명과학대.산업대학', 'description': 'ⓘ 정문 방향(29050)'},
+      {'name': '경희대체육대학.외대', 'description': 'ⓘ 정문 방향(29044)'},
+      {'name': '경희대학교(정건)', 'description': 'ⓘ 정문 방향(04241)'},
     ],
     'descending': [ // 사색 방향
-      {'name': '경희대정문', 'description': '사색행'},
-      {'name': '외국어대학', 'description': '사색행'},
-      {'name': '생명과학대', 'description': '사색행'},
-      {'name': '사색의광장', 'description': '사색행'},
+      {'name': '경희대정문', 'description': 'ⓘ 사색 방향(29038)'},
+      {'name': '외국어대학', 'description': 'ⓘ 사색 방향(29040)'},
+      {'name': '생명과학대', 'description': 'ⓘ 사색 방향(29049)'},
+      {'name': '사색의광장', 'description': 'ⓘ 사색 방향(29057)'},
     ],
   };
 
@@ -49,19 +49,12 @@ class _StationScreenState extends State<StationScreen> {
               ),
               SizedBox(height: 4),
               Text(
-                'M5107과 1560은 서울대학교 학기 시 서울 지역과 교대역 방면을 경유합니다.',
+                'ⓘ M5107과 1560은 교내 버스 이동 시간을 고려하여 보정된 버스 도착 정보를 제공합니다.',
                 style: TextStyle(
                   color: Colors.grey,
                   fontSize: 12,
                 ),
               ),
-              Text(
-                '버스 도착 정보 시간은 평균 운행 시간과 시간대별 패턴으로 예측한 결과입니다.',
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontSize: 12,
-                ),
-                ),
               ],
             ),
           ),
@@ -173,7 +166,7 @@ class _StationScreenState extends State<StationScreen> {
                                       onPressed: () {
                                         // TODO: 버스 도착 예정 시간 기능 구현
                                       },
-                                      child: const Text('버스 도착 예정 시간'),
+                                      child: const Text('과거 도착 시간'),
                                     ),
                                   ),
                                   const SizedBox(width: 8),

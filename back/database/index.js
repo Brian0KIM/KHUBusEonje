@@ -891,24 +891,43 @@ async function getPastBusArrival(routeId, stationId, staOrder, date, onlySevenDa
     try {
         const cache = await loadCache();
         const requestDate = DateTime.fromISO(date);
-        const cacheKey = `${routeId}-${stationId}-${staOrder}-${date}`;
+        
+        let datesToFetch = onlySevenDays ? [-7] : (() => {
+            const weekday = requestDate.weekday;
+            switch (weekday) {
+                case 1: // 월요일
+                    return [-3, -7];
+                case 2: // 화요일
+                    return [-1, -7];
+                case 3: // 수요일
+                case 4: // 목요일
+                case 5: // 금요일
+                    return [-1, -2, -7];
+                case 6: // 토요일
+                case 7: // 일요일
+                    return [-7];
+                default:
+                    return [-7];
+            }
+        })();
 
-        if (cache[cacheKey]) {
-            return {
-                ok: true,
-                data: cache[cacheKey],
-                source: 'cache'
-            };
-        }
-
-        const datesToFetch = onlySevenDays 
-            ? [-7] 
-        : (requestDate.weekday >= 6 ? [-7] : [-1, -2, -7]);
         let allResults = [];
+        let isAllFromCache = true; // 모든 데이터가 캐시에서 왔는지 확인하는 플래그
         
         for (const dayOffset of datesToFetch) {
             const targetDate = requestDate.plus({ days: dayOffset }).toFormat('yyyy-MM-dd');
+            const cacheKey = `${routeId}-${stationId}-${staOrder}-${targetDate}`;
             
+            // 캐시 확인
+            if (cache[cacheKey]) {
+                console.log(`캐시 데이터 사용: ${cacheKey}`);
+                allResults = allResults.concat(cache[cacheKey]);
+                continue;
+            }
+
+            isAllFromCache = false; // API 호출이 필요한 경우
+            console.log(`API 호출 필요: ${cacheKey}`);
+
             if (lastApiCall) {
                 const timeSinceLastCall = Date.now() - lastApiCall;
                 if (timeSinceLastCall < API_CALL_INTERVAL) {
@@ -916,29 +935,26 @@ async function getPastBusArrival(routeId, stationId, staOrder, date, onlySevenDa
                 }
             }
 
-            // specialRouteMappingFullPath 확인
             const specialConfig = specialRouteMappingFullPath[stationId]?.[routeId];
             const actualStationId = specialConfig ? specialConfig.referenceStationId : stationId;
             const actualStaOrder = specialConfig ? (Number(staOrder) - specialConfig.staOrderOffset).toString() : staOrder;
 
-            // 실제 API 호출
             const busArrivalList = await fetchBusHistory(routeId, actualStationId, actualStaOrder, targetDate);
             lastApiCall = Date.now();
 
             if (busArrivalList && busArrivalList.length > 0) {
-                // specialRouteMapping 적용
                 const mappedData = applySpecialRouteMapping(busArrivalList, stationId, routeId);
+                cache[cacheKey] = mappedData;
                 allResults = allResults.concat(mappedData);
             }
         }
 
-        cache[cacheKey] = allResults;
         await saveCache(cache);
 
         return {
             ok: true,
             data: allResults,
-            source: 'api'
+            source: isAllFromCache ? 'cache' : 'api'
         };
 
     } catch (error) {
@@ -946,7 +962,6 @@ async function getPastBusArrival(routeId, stationId, staOrder, date, onlySevenDa
         throw error;
     }
 }
-
 function applySpecialRouteMapping(data, stationId, routeId) {
     // specialRouteMappingFullPath 적용 로직
     const mappedData = data.map(item => {
