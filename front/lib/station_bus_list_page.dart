@@ -32,14 +32,14 @@ class _StationBusListPageState extends State<StationBusListPage> {
       '200000112': '7000',
       '234001243': 'M5107',
     };
-
+ final ScrollController _scrollController = ScrollController();
   @override
   void initState() {
     super.initState();
     fetchTimeBasedData();
   }
 
-  Future<void> fetchTimeBasedData() async {
+   Future<void> fetchTimeBasedData() async {
     setState(() {
       isLoading = true;
     });
@@ -49,6 +49,7 @@ class _StationBusListPageState extends State<StationBusListPage> {
       final formattedDate = "${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}";
       
       final response = await http.get(
+        //Uri.parse('http://10.0.2.2:8081/bus/history/byTime?stationId=${widget.stationId}&date=$formattedDate'),
         Uri.parse('http://localhost:8081/bus/history/byTime?stationId=${widget.stationId}&date=$formattedDate'),
       );
 
@@ -63,17 +64,13 @@ class _StationBusListPageState extends State<StationBusListPage> {
                 'time': "${arrivalDateTime.hour.toString().padLeft(2, '0')}:${arrivalDateTime.minute.toString().padLeft(2, '0')}",
                 'routeNumber': routeIdToNumber[item['routeId'].toString()] ?? '알 수 없음',
                 'date': "${arrivalDateTime.month}월 ${arrivalDateTime.day}일",
+                'fullDateTime': arrivalDateTime,
               };
             }).toList();
-            
-            // 현재 시간과 가까운 순으로 정렬
-            final now = DateTime.now();
-            timeBasedData.sort((a, b) {
-              final aTime = _parseTime(a['time']);
-              final bTime = _parseTime(b['time']);
-              final aDiff = _getTimeDifference(now, aTime);
-              final bDiff = _getTimeDifference(now, bTime);
-              return aDiff.compareTo(bDiff);
+
+            // 데이터 로드 후 현재 시간과 가장 가까운 인덱스 찾기
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _scrollToCurrentTime();
             });
           });
         }
@@ -91,16 +88,37 @@ class _StationBusListPageState extends State<StationBusListPage> {
     }
   }
 
-  DateTime _parseTime(String timeStr) {
+  void _scrollToCurrentTime() {
+    if (timeBasedData.isEmpty) return;
+
     final now = DateTime.now();
-    final parts = timeStr.split(':');
-    return DateTime(now.year, now.month, now.day, 
-      int.parse(parts[0]), int.parse(parts[1]));
+    final currentTimeMinutes = now.hour * 60 + now.minute;
+    
+    // 현재 시간과 가장 가까운 인덱스 찾기
+    int closestIndex = 0;
+    int minDifference = double.maxFinite.toInt();
+
+    for (int i = 0; i < timeBasedData.length; i++) {
+      final itemDateTime = timeBasedData[i]['fullDateTime'] as DateTime;
+      final itemMinutes = itemDateTime.hour * 60 + itemDateTime.minute;
+      
+      final difference = (itemMinutes - currentTimeMinutes).abs();
+      if (difference < minDifference) {
+        minDifference = difference;
+        closestIndex = i;
+      }
+    }
+
+    // 찾은 인덱스로 스크롤
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        closestIndex * 56.0, // ListTile의 대략적인 높이
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
   }
 
-  int _getTimeDifference(DateTime now, DateTime time) {
-    return (time.hour * 60 + time.minute) - (now.hour * 60 + now.minute);
-  }
 
    Widget _buildTimeBasedList() {
     if (isLoading) {
@@ -211,7 +229,11 @@ class _StationBusListPageState extends State<StationBusListPage> {
       ),
     );
   }
-
+  @override
+    void dispose() {
+      _scrollController.dispose();
+      super.dispose();
+    }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
