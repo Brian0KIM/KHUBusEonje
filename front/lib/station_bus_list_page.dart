@@ -36,7 +36,7 @@ class _StationBusListPageState extends State<StationBusListPage> {
   @override
   void initState() {
     super.initState();
-    fetchTimeBasedData();
+    //fetchTimeBasedData();
   }
 
    Future<void> fetchTimeBasedData() async {
@@ -65,6 +65,7 @@ class _StationBusListPageState extends State<StationBusListPage> {
                 'routeNumber': routeIdToNumber[item['routeId'].toString()] ?? '알 수 없음',
                 'date': "${arrivalDateTime.month}월 ${arrivalDateTime.day}일",
                 'fullDateTime': arrivalDateTime,
+                'isCalculated': item['isCalculated']??false,
               };
             }).toList();
 
@@ -138,7 +139,7 @@ class _StationBusListPageState extends State<StationBusListPage> {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Text(
-              "${widget.stationName}(${timeBasedData.isNotEmpty ? timeBasedData[0]['date'] : ''}) 기준",
+              "${widget.stationName}(${timeBasedData.isNotEmpty ? timeBasedData[0]['date'] : ''} 기준)",
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -148,6 +149,7 @@ class _StationBusListPageState extends State<StationBusListPage> {
           const Divider(height: 1),
           Expanded(
             child: ListView.separated(
+              //controller: _scrollController,
               padding: EdgeInsets.zero,
               itemCount: timeBasedData.length,
               separatorBuilder: (context, index) => const Divider(height: 1),
@@ -158,13 +160,37 @@ class _StationBusListPageState extends State<StationBusListPage> {
                     Icons.directions_bus,
                     color: getBusColor(item['routeNumber']),
                   ),
-                  title: Text(
-                    item['time'],
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                  title: Row(
+                  children: [
+                    Text(
+                      item['time'],
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
+                    if (item['isCalculated'] == true) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Text(
+                          '보정됨',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
                   subtitle: Text(
                     "${item['routeNumber']}번",
                     style: TextStyle(
@@ -300,8 +326,14 @@ class _StationBusListPageState extends State<StationBusListPage> {
               ],
               selected: {currentSegment},
               onSelectionChanged: (Set<String> newSelection) {
+                /*setState(() {
+                  currentSegment = newSelection.first;
+                });*/
                 setState(() {
                   currentSegment = newSelection.first;
+                  if (currentSegment == '시간순') {
+                    fetchTimeBasedData();
+                  }
                 });
               },
               style: ButtonStyle(
