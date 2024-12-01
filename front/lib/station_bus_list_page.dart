@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'station_bus_info_page.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class StationBusListPage extends StatefulWidget {
   final String stationId;
@@ -19,6 +21,196 @@ class _StationBusListPageState extends State<StationBusListPage> {
   Set<String> segments = {'버스별', '시간순'};
   String currentSegment = '버스별';
   final List<String> busOrder = ['9', '1112', '1560A', '1560B', '5100', '7000', 'M5107'];
+  List<Map<String, dynamic>> timeBasedData = [];
+    bool isLoading = false;
+    final Map<String, String> routeIdToNumber = {
+      '200000103': '9',
+      '234000016': '1112',
+      '234000884': '1560A',
+      '228000433': '1560B',
+      '200000115': '5100',
+      '200000112': '7000',
+      '234001243': 'M5107',
+    };
+
+  @override
+  void initState() {
+    super.initState();
+    fetchTimeBasedData();
+  }
+
+  Future<void> fetchTimeBasedData() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final today = DateTime.now();
+      final formattedDate = "${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}";
+      
+      final response = await http.get(
+        Uri.parse('http://localhost:8081/bus/history/byTime?stationId=${widget.stationId}&date=$formattedDate'),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['ok']) {
+          final List<dynamic> rawData = data['data'];
+          setState(() {
+            timeBasedData = rawData.map<Map<String, dynamic>>((item) {
+              final arrivalDateTime = DateTime.parse(item['RArrivalDate']);
+              return {
+                'time': "${arrivalDateTime.hour.toString().padLeft(2, '0')}:${arrivalDateTime.minute.toString().padLeft(2, '0')}",
+                'routeNumber': routeIdToNumber[item['routeId'].toString()] ?? '알 수 없음',
+                'date': "${arrivalDateTime.month}월 ${arrivalDateTime.day}일",
+              };
+            }).toList();
+            
+            // 현재 시간과 가까운 순으로 정렬
+            final now = DateTime.now();
+            timeBasedData.sort((a, b) {
+              final aTime = _parseTime(a['time']);
+              final bTime = _parseTime(b['time']);
+              final aDiff = _getTimeDifference(now, aTime);
+              final bDiff = _getTimeDifference(now, bTime);
+              return aDiff.compareTo(bDiff);
+            });
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('오류 발생: $e')),
+        );
+      }
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  DateTime _parseTime(String timeStr) {
+    final now = DateTime.now();
+    final parts = timeStr.split(':');
+    return DateTime(now.year, now.month, now.day, 
+      int.parse(parts[0]), int.parse(parts[1]));
+  }
+
+  int _getTimeDifference(DateTime now, DateTime time) {
+    return (time.hour * 60 + time.minute) - (now.hour * 60 + now.minute);
+  }
+
+   Widget _buildTimeBasedList() {
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16.0),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.blue.shade100),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              "${widget.stationName}(${timeBasedData.isNotEmpty ? timeBasedData[0]['date'] : ''}) 기준",
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          const Divider(height: 1),
+          Expanded(
+            child: ListView.separated(
+              padding: EdgeInsets.zero,
+              itemCount: timeBasedData.length,
+              separatorBuilder: (context, index) => const Divider(height: 1),
+              itemBuilder: (context, index) {
+                final item = timeBasedData[index];
+                return ListTile(
+                  leading: Icon(
+                    Icons.directions_bus,
+                    color: getBusColor(item['routeNumber']),
+                  ),
+                  title: Text(
+                    item['time'],
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  subtitle: Text(
+                    "${item['routeNumber']}번",
+                    style: TextStyle(
+                      color: getBusColor(item['routeNumber']),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+   Widget _buildBusList() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16.0),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.blue.shade100),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: List.generate(
+          busOrder.length,
+          (index) {
+            final busNumber = busOrder[index];
+            return Column(
+              children: [
+                ListTile(
+                  leading: Icon(
+                    Icons.directions_bus,
+                    color: getBusColor(busNumber),
+                  ),
+                  title: Text(
+                    busNumber,
+                    style: TextStyle(
+                      color: getBusColor(busNumber),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => StationBusInfoPage(
+                          stationId: widget.stationId,
+                          stationName: widget.stationName,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                if (index < busOrder.length - 1)
+                  const Divider(height: 1),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,14 +235,14 @@ class _StationBusListPageState extends State<StationBusListPage> {
                   ),
                 ),
                 const Text(
-                  '버스 도착 예측 시간',
+                  '버스 과거 도착 시간',
                   style: TextStyle(
                     color: Colors.grey,
                     fontSize: 14,
                   ),
                 ),
                 const Text(
-                  'ⓘ 시간순 조회는 현재 시간으로부터 도착 시간순으로 조회 가능합니다.',
+                  'ⓘ 시간순 조회는 7일전 도착 시간 기록입니다.',
                   style: TextStyle(
                     color: Colors.grey,
                     fontSize: 12,
@@ -98,47 +290,8 @@ class _StationBusListPageState extends State<StationBusListPage> {
             ),
           ),
           const SizedBox(height: 16),
-          Expanded(
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16.0),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.blue.shade100),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: ListView.separated(
-                padding: EdgeInsets.zero,
-                itemCount: busOrder.length,
-                separatorBuilder: (context, index) => const Divider(height: 1),
-                itemBuilder: (context, index) {
-                  final busNumber = busOrder[index];
-                  return ListTile(
-                    leading: Icon(
-                      Icons.directions_bus,
-                      color: getBusColor(busNumber),
-                    ),
-                    title: Text(
-                      busNumber,
-                      style: TextStyle(
-                        color: getBusColor(busNumber),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => StationBusInfoPage(
-                            stationId: widget.stationId,
-                            stationName: widget.stationName,
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
+           Expanded(
+            child: currentSegment == '버스별' ? _buildBusList() : _buildTimeBasedList(),
           ),
         ],
       ),
