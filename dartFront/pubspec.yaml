@@ -9,6 +9,7 @@ dependencies:
   dio: ^5.4.0
   envied: ^0.5.3
   url_launcher: ^6.2.5
+  google_maps_flutter: ^2.10.0
 
 assets:
   - assets/data/

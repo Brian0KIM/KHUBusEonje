@@ -6,6 +6,7 @@ import "bus_info.dart";
 import "passed_bus_page.dart";
 import "bus_screen.dart";
 import "station_screen.dart";
+import "map_screen.dart";
 void main() {
   runApp(const MyApp());
 }
@@ -51,8 +52,8 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     try {
-      //final Uri url = Uri.parse('http://10.0.2.2:8081/user/login');
-      final Uri url = Uri.parse('http://localhost:8081/user/login');// 로그인 API 주소
+      final Uri url = Uri.parse('http://10.0.2.2:8081/user/login');
+      //final Uri url = Uri.parse('http://localhost:8081/user/login');// 로그인 API 주소
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
@@ -207,7 +208,7 @@ class _NavigationBarScreenState extends State<NavigationBarScreen> {
     _pages = [
       const ComplaintServiceScreen(), // 민원 화면
       const BusScreen(), // 버스 화면
-      const Center(child: Text('지도 화면')), // 지도 화면
+      const MapScreen(), // 지도 화면
       const StationScreen(), // 정류장 화면
       UserInfoScreen(
         userName: widget.userName,
