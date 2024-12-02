@@ -44,7 +44,8 @@ class _BusArrivalPageState extends State<BusArrivalPage> {
     try {
       final routeId = busRouteMap[widget.routeNumber];
       final response = await http.get(
-        Uri.parse('http://localhost:8081/bus/$routeId/eta'),
+        //Uri.parse('http://localhost:8081/bus/$routeId/eta'),
+        Uri.parse('http://10.0.2.2:8081/bus/$routeId/eta'),
       );
 
       if (response.statusCode == 200) {

@@ -27,7 +27,8 @@ class _PassedBusPageState extends State<PassedBusPage> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:8081/complain/$currentStationId/passedby'),
+        //Uri.parse('http://localhost:8081/complain/$currentStationId/passedby'),
+        Uri.parse('http://10.0.2.2:8081/complain/$currentStationId/passedby'),
       );
 
       if (response.statusCode == 200) {

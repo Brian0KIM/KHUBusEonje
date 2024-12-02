@@ -272,8 +272,8 @@ class UserInfoScreen extends StatelessWidget {
 
   Future<void> _logout(BuildContext context) async {
     try {
-      //final Uri url = Uri.parse('http://10.0.2.2:8081/user/logout'); // 로그아웃 API 주소
-      final Uri url = Uri.parse('http://localhost:8081/user/logout');
+      final Uri url = Uri.parse('http://10.0.2.2:8081/user/logout'); // 로그아웃 API 주소
+      //final Uri url = Uri.parse('http://localhost:8081/user/logout');
       final response = await http.post(
         url,
         headers: {
@@ -560,7 +560,7 @@ class ComplaintServiceScreen extends StatelessWidget {
     return Card(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12.0),
-        side: const BorderSide(color: Colors.lightBlue, width: 2), // 하늘색 테두리
+        side: const BorderSide(color: Colors.lightBlue, width: 2),
       ),
       elevation: 4,
       child: Padding(
@@ -578,60 +578,90 @@ class ComplaintServiceScreen extends StatelessWidget {
             const SizedBox(height: 10),
             Row(
               children: [
-                const Icon(Icons.phone, size: 16),
-                const SizedBox(width: 5),
-                Text(
-                  phone1,
-                  style: const TextStyle(fontSize: 14),
+                Expanded(
+                  child: Row(
+                    children: [
+                      const Icon(Icons.phone, size: 16),
+                      const SizedBox(width: 5),
+                      Flexible(
+                        child: Text(
+                          phone1,
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                const Spacer(),
-                const Icon(Icons.phone, size: 16),
-                const SizedBox(width: 5),
-                Text(
-                  phone2,
-                  style: const TextStyle(fontSize: 14),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      const Icon(Icons.phone, size: 16),
+                      const SizedBox(width: 5),
+                      Flexible(
+                        child: Text(
+                          phone2,
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 10),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.lightBlue,
-                    side: const BorderSide(color: Colors.lightBlue),
-                  ),
-                  onPressed: () {
-                    // 회사 정보 페이지로 이동
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CompanyInfoPage(
-                          companyId: getCompanyId(button1Text),
+                Expanded(
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.lightBlue,
+                      side: const BorderSide(color: Colors.lightBlue),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => CompanyInfoPage(
+                            companyId: getCompanyId(button1Text),
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                  child: Text(button1Text),
+                      );
+                    },
+                    child: Text(
+                      button1Text,
+                      textAlign: TextAlign.center,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 12),
+                      
+                    ),
+                  ),
                 ),
-                OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.lightBlue,
-                    side: const BorderSide(color: Colors.lightBlue),
-                  ),
-                  onPressed: () {
-                    // 두 번째 버튼 동작
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CompanyInfoPage(
-                          companyId: getCompanyId(button2Text),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.lightBlue,
+                      side: const BorderSide(color: Colors.lightBlue),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => CompanyInfoPage(
+                            companyId: getCompanyId(button2Text),
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                  child: Text(button2Text),
+                      );
+                    },
+                    child: Text(
+                      button2Text,
+                      textAlign: TextAlign.center,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ),
                 ),
               ],
             ),

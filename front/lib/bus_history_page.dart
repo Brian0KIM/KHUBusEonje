@@ -91,7 +91,8 @@ class _BusHistoryPageState extends State<BusHistoryPage> {
       final formattedDate = "${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}";
       
       final response = await http.get(
-        Uri.parse('http://localhost:8081/bus/history/byBus?routeId=${widget.routeId}&stationId=${widget.stationId}&date=$formattedDate'),
+        //Uri.parse('http://localhost:8081/bus/history/byBus?routeId=${widget.routeId}&stationId=${widget.stationId}&date=$formattedDate'),
+        Uri.parse('http://10.0.2.2:8081/bus/history/byBus?routeId=${widget.routeId}&stationId=${widget.stationId}&date=$formattedDate'),
       );
 
       if (response.statusCode == 200) {
