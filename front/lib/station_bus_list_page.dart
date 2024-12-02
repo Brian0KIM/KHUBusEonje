@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'station_bus_info_page.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'bus_history_page.dart';
 
 class StationBusListPage extends StatefulWidget {
   final String stationId;
@@ -238,9 +239,14 @@ class _StationBusListPageState extends State<StationBusListPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => StationBusInfoPage(
+                        builder: (context) => BusHistoryPage(
+                          routeId: routeIdToNumber.keys.firstWhere(
+                            (key) => routeIdToNumber[key] == busNumber,
+                            orElse: () => '',
+                          ),
                           stationId: widget.stationId,
                           stationName: widget.stationName,
+                          busNumber: busNumber,
                         ),
                       ),
                     );
