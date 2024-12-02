@@ -70,6 +70,11 @@ flutter:
   #   - images/a_dot_ham.jpeg
   assets:
     - assets/timetables/
+    - assets/timetables/9.jpg    # 또는 개별 파일들을 명시
+    - assets/timetables/7000.jpg
+    - assets/timetables/5100.jpg
+    - assets/timetables/M5107.jpg
+
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 

@@ -65,7 +65,7 @@ class BusTimeTablePage extends StatelessWidget {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12.0),
               child: Image.asset(
-                'timetables/$routeNumber.jpg',
+                'assets/timetables/$routeNumber.jpg',
               fit: BoxFit.contain,
               errorBuilder: (context, error, stackTrace) {
                 return Center(
