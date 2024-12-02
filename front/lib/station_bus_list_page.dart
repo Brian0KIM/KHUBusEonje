@@ -149,7 +149,7 @@ class _StationBusListPageState extends State<StationBusListPage> {
           const Divider(height: 1),
           Expanded(
             child: ListView.separated(
-              //controller: _scrollController,
+              controller: _scrollController,
               padding: EdgeInsets.zero,
               itemCount: timeBasedData.length,
               separatorBuilder: (context, index) => const Divider(height: 1),

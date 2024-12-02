@@ -38,7 +38,7 @@ class _StationBusInfoPageState extends State<StationBusInfoPage> {
   void initState() {
     super.initState();
     fetchBusData();
-    _timer = Timer.periodic(const Duration(seconds: 15), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 30), (timer) {
       fetchBusData();
     });
   }

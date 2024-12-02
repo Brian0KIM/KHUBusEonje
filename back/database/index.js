@@ -944,8 +944,12 @@ async function getPastBusArrival(routeId, stationId, staOrder, date, onlySevenDa
 
             if (busArrivalList && busArrivalList.length > 0) {
                 const mappedData = applySpecialRouteMapping(busArrivalList, stationId, routeId);
-                cache[cacheKey] = mappedData;
-                allResults = allResults.concat(mappedData);
+                const dataWithOffset = mappedData.map(item => ({
+                    ...item,
+                    daysAgo: Math.abs(dayOffset)
+                }));
+                cache[cacheKey] = dataWithOffset;
+                allResults = allResults.concat(dataWithOffset);
             }
         }
 
