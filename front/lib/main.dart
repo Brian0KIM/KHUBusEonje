@@ -209,7 +209,7 @@ class _NavigationBarScreenState extends State<NavigationBarScreen> {
       const ComplaintServiceScreen(), // 민원 화면
       const BusScreen(), // 버스 화면
       const MapScreen(), // 지도 화면
-      const StationScreen(), // 정류장 화면
+      const StationScreen(stationName: "정류장"), // 정류장 화면
       UserInfoScreen(
         userName: widget.userName,
         userId: widget.userId,

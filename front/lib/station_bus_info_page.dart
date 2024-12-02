@@ -65,7 +65,8 @@ class _StationBusInfoPageState extends State<StationBusInfoPage> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:8081/stop/${widget.stationId}/eta'),
+        //Uri.parse('http://localhost:8081/stop/${widget.stationId}/eta'),
+        Uri.parse('http://10.0.2.2:8081/stop/${widget.stationId}/eta'),
       );
 
       if (response.statusCode == 200) {

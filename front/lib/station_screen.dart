@@ -4,7 +4,13 @@ import 'bus_info.dart';
 import 'station_bus_list_page.dart';
 
 class StationScreen extends StatefulWidget {
-  const StationScreen({super.key});
+  final String stationName;  // stationName 매개변수 추가
+
+  const StationScreen({
+    super.key,
+    required this.stationName,  // required로 필수 매개변수로 지정
+  });
+  
 
   @override
   State<StationScreen> createState() => _StationScreenState();
@@ -33,7 +39,7 @@ class _StationScreenState extends State<StationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('정류장별 버스 정보'),
+        title: Text(widget.stationName),
       ),
       body: Column(
         children: [
@@ -62,7 +68,7 @@ class _StationScreenState extends State<StationScreen> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
             child: Stack(
               alignment: Alignment.center,
               children: [
