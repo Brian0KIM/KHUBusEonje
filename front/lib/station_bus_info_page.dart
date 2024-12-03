@@ -143,7 +143,7 @@ class _StationBusInfoPageState extends State<StationBusInfoPage> {
                         ),
                         onPressed: isLoading ? null : () => fetchBusData(),
                         style: IconButton.styleFrom(
-                          foregroundColor: Colors.blue,
+                          foregroundColor: Colors.grey,
                           padding: const EdgeInsets.all(8),
                         ),
                       ),
