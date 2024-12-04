@@ -250,7 +250,7 @@ class _BusArrivalPageState extends State<BusArrivalPage> {
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
-                                        const TextSpan(text: '째 정류장\n'),
+                                        const TextSpan(text: '번째 정류장\n'),
                                         const TextSpan(
                                           text: '사색의광장',
                                         ),

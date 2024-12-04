@@ -80,7 +80,15 @@ class _PassedBusPageState extends State<PassedBusPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  '정문, 정건 정류장 기준 10분 전 지나간 버스까지 조회가능합니다',
+                  'ⓘ 정문, 정건 정류장 기준 도착이 임박한 버스를',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey,
+                  ),
+                ),
+                const Text(
+                  '    현재 시간으로부터 10분 전까지 조회가능합니다',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -191,7 +199,7 @@ class _PassedBusPageState extends State<PassedBusPage> {
                                   color: getBusColor(bus['routeName'])),
                               title: Text(
                                 bus['routeName'],
-                                style: const TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(fontWeight: FontWeight.bold,color: getBusColor(bus['routeName'])),
                               ),
                               subtitle: Text(
                                 '${bus['plateNo']}\n$formattedTime 도착 예정',

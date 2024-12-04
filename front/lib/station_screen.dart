@@ -58,12 +58,19 @@ class _StationScreenState extends State<StationScreen> {
               ),
               SizedBox(height: 4),
               Text(
-                'ⓘ M5107과 1560은 교내 버스 이동 시간을 고려하여 보정된 버스 도착 정보를 제공합니다.',
+                'ⓘ M5107과 1560은 교내 버스 이동 시간을 고려하여',
                 style: TextStyle(
                   color: Colors.grey,
                   fontSize: 12,
                 ),
               ),
+              Text(
+                  '    보정된 버스 도착 정보를 제공합니다.',
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 12,
+                  ),
+                ),
               ],
             ),
           ),

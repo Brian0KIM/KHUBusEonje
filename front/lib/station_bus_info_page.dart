@@ -159,7 +159,15 @@ class _StationBusInfoPageState extends State<StationBusInfoPage> {
                   ),
                 ),
                 const Text(
-                  'ⓘ M5107과 1560은 교내 버스 이동 시간을 고려하여 보정된 버스 도착 정보를 제공합니다.',
+                  'ⓘ M5107과 1560은 교내 버스 이동 시간을 고려하여',
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Text(
+                  '    보정된 버스 도착 정보를 제공합니다.',
                   style: TextStyle(
                     color: Colors.grey,
                     fontSize: 12,
