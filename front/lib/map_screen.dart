@@ -1,3 +1,4 @@
+//캠퍼스 지도 페이지
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/material.dart';
 import 'station_bus_info_page.dart';
@@ -92,7 +93,7 @@ class _MapScreenState extends State<MapScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('캠퍼스 지도'),
+        title: const Text('경희대학교 지도'),
       ),
       body: GoogleMap(
         mapType: MapType.normal,

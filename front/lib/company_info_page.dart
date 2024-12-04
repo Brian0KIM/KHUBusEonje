@@ -1,3 +1,4 @@
+//회사 정보 페이지
 import 'package:flutter/material.dart';
 import 'bus_company.dart';
 

@@ -1,10 +1,13 @@
+//방금 지나간 버스 페이지
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
 
 class PassedBusPage extends StatefulWidget {
-  const PassedBusPage({super.key});
+  final String? companyId; // nullable로 선언 (기본 화면에서는 null)
+  
+  const PassedBusPage({super.key, this.companyId});
 
   @override
   State<PassedBusPage> createState() => _PassedBusPageState();
@@ -12,10 +15,28 @@ class PassedBusPage extends StatefulWidget {
 
 class _PassedBusPageState extends State<PassedBusPage> {
   String currentStationId = "228000723"; // 기본값: 사색방향
+  final Map<String, List<String>> companyRoutes = {
+    "1": ["9", "5100", "7000"],         // 용남고속
+    "2": ["1112", "1560A", "1560B"],    // 대원고속
+    "3": ["M5107"],                      // 경기고속
+  };
   List<dynamic> busData = [];
   bool isLoading = false;
   Timer? _timer;
+  List<dynamic> getFilteredBusData() {
+      if (widget.companyId == null) {
+        return busData; // companyId가 없으면 모든 데이터 반환
+      }
+      
+      final companyBusRoutes = companyRoutes[widget.companyId];
+      if (companyBusRoutes == null) {
+        return busData;
+      }
 
+      return busData.where((bus) => 
+        companyBusRoutes.contains(bus['routeName'])
+      ).toList();
+    }
   @override
   void initState() {
     super.initState();
@@ -148,7 +169,7 @@ class _PassedBusPageState extends State<PassedBusPage> {
           Expanded(
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : busData.isEmpty
+                : getFilteredBusData().isEmpty // busData 대신 getFilteredBusData() 사용
                     ? Card(
                         margin: const EdgeInsets.symmetric(
                           horizontal: 16.0,
@@ -185,9 +206,9 @@ class _PassedBusPageState extends State<PassedBusPage> {
                         ),
                       )
                     : ListView.builder(
-                        itemCount: busData.length,
+                        itemCount: getFilteredBusData().length,
                         itemBuilder: (context, index) {
-                          final bus = busData[index];
+                          final bus = getFilteredBusData()[index];
                           final expectedArrival = DateTime.parse(bus['expectedArrival']);
                           final formattedTime =
                               '${expectedArrival.hour.toString().padLeft(2, '0')}:${expectedArrival.minute.toString().padLeft(2, '0')}';

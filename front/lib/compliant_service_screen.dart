@@ -1,3 +1,4 @@
+//민원 도우미 서비스 페이지
 import 'package:flutter/material.dart';
 import 'company_info_page.dart';
 import 'passed_bus_page.dart';
@@ -174,7 +175,9 @@ class ComplaintServiceScreen extends StatelessWidget {
                      Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const PassedBusPage(),
+                        builder: (context) => PassedBusPage(
+                          companyId: getCompanyId(), // 회사 ID 전달
+                        ),
                       ),
                     );
                   },
