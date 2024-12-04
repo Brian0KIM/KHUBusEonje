@@ -1,3 +1,4 @@
+//정류장 버스 도착 정보 페이지
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -143,7 +144,7 @@ class _StationBusInfoPageState extends State<StationBusInfoPage> {
                         ),
                         onPressed: isLoading ? null : () => fetchBusData(),
                         style: IconButton.styleFrom(
-                          foregroundColor: Colors.blue,
+                          foregroundColor: Colors.grey,
                           padding: const EdgeInsets.all(8),
                         ),
                       ),
@@ -159,7 +160,15 @@ class _StationBusInfoPageState extends State<StationBusInfoPage> {
                   ),
                 ),
                 const Text(
-                  'ⓘ M5107과 1560은 교내 버스 이동 시간을 고려하여 보정된 버스 도착 정보를 제공합니다.',
+                  'ⓘ M5107과 1560은 교내 버스 이동 시간을 고려하여',
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Text(
+                  '    보정된 버스 도착 정보를 제공합니다.',
                   style: TextStyle(
                     color: Colors.grey,
                     fontSize: 12,

@@ -1,6 +1,5 @@
+//버스 노선 페이지
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'bus_timetable_page.dart';
 import 'bus_arrival_page.dart';
 class BusScreen extends StatelessWidget {

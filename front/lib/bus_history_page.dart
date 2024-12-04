@@ -1,3 +1,4 @@
+//과거 버스 도착 정보(버스별) 페이지
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;

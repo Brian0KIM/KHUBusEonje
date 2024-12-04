@@ -1,3 +1,4 @@
+//버스 회사 데이터
 const Map<String, dynamic> companyData = {"1":
 {
 "name":"용남고속",

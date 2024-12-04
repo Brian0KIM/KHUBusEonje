@@ -1,5 +1,5 @@
+//과거 도착 정보(시간순) 페이지
 import 'package:flutter/material.dart';
-import 'station_bus_info_page.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'bus_history_page.dart';
