@@ -115,7 +115,7 @@ class _StationBusListPageState extends State<StationBusListPage> {
     if (_scrollController.hasClients) {
       _scrollController.animateTo(
         closestIndex * 56.0, // ListTile의 대략적인 높이
-        duration: const Duration(milliseconds: 300),
+        duration: const Duration(milliseconds: 1500),
         curve: Curves.easeOut,
       );
     }

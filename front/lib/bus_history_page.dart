@@ -220,6 +220,7 @@ class _BusHistoryPageState extends State<BusHistoryPage> {
                               separatorBuilder: (context, index) => const Divider(height: 1),
                               itemBuilder: (context, index) {
                                 return ListTile(
+                                  horizontalTitleGap: 8,
                                   leading: Icon(Icons.directions_bus, color: getBusColor(widget.busNumber)),
                                   title: Text(
                                     entry.value[index],
