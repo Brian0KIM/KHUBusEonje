@@ -77,6 +77,7 @@ app.post('/user/login', (req, res) => {
     
 })
 
+
 app.post('/user/logout', (req, res) => {
     const id = req.body.id
     const cookie = req.body.cookie
@@ -124,6 +125,8 @@ app.post('/user/logout', (req, res) => {
         });
     });
 });
+
+
 app.get('/user/status', (req, res) => {
     const id = req.query.id;  // id는 쿼리로 받고
     const cookie = req.headers.authorization;  // 쿠키는 헤더로 받음
@@ -165,8 +168,6 @@ app.get('/user/status', (req, res) => {
         }
     });
 });
-
-
 
 
 app.get('/bus/:routeId/eta', (req, res) => {
@@ -216,6 +217,7 @@ app.get('/stop/:stationId/eta', (req, res) => {
     );
 });
 
+
 app.get('/complain/:stationId/passedby', (req, res) => {
     const stationId = req.params.stationId;
     const predictions = database.getStoredPredictionsByStation(stationId);
@@ -235,6 +237,7 @@ app.get('/complain/:stationId/passedby', (req, res) => {
         data: predictions
     });
 });
+
 
 app.get('/bus/history/byBus', async (req, res) => {
     try {
@@ -285,6 +288,7 @@ app.get('/bus/history/byBus', async (req, res) => {
         });
     }
 });
+
 
 app.get('/bus/history/byTime', async (req, res) => {
     try {

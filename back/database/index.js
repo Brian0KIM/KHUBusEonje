@@ -8,285 +8,15 @@ const request = require('request');
 const fs2 = require('fs').promises;
 const { DateTime } = require('luxon');
 const session=[];
-const bus= {
-    lastUpdate: null,
-    currentData: null,
-    updateInterval: null,
-    routeId: null,
-    routeName: null,
-    stationId: null,
-    staOrder: null,
-    predictTime1: null,
-    predictTime2: null,
-    remainSeatCnt1: null,
-    remainSeatCnt2: null,
-
-};
-const busRouteMap = {
-    "200000103": "9",
-    "234000016": "1112",
-    "200000115": "5100",
-    "200000112": "7000",
-    "234001243": "M5107",
-    "234000884": "1560A",
-    "228000433": "1560B"
-
-};
-const stationMap = {
-    "228001174": "사색의광장(정문행)",
-    "228000704": "생명과학대.산업대학(정문행)",
-    "228000703": "경희대체육대학.외대(정문행)",
-    "203000125": "경희대학교(정문행)",
-    "228000723": "경희대정문(사색행)",
-    "228000710": "외국어대학(사색행)",
-    "228000709": "생명과학대(사색행)",
-    "228000708": "사색의광장(사색행)",
-    "228000706": "경희대차고지(1)",
-    "228000707": "경희대차고지(2)"
-    //"203000037": "경희대정문(사색행)" 
-
-
-};
 const busArrival = {
     lastUpdate: null,
     currentData: {},  // stopId를 키로 사용
     updateIntervals: {}  // 각 정류장별 인터벌 저장
 };
-const specialRouteMapping={
-    "228000710": {  // 외국어대학(사색행)
-        "234001243": {  // M5107
-            referenceStationId: "228000723",  // 경희대정문(사색행)
-            timeOffset: 1,
-            staOrderOffset: 1  
-        },
-        "234000884": {  // 1560A
-            referenceStationId: "228000723",  // 경희대정문(사색행)
-            timeOffset: 1,
-            staOrderOffset: 1  
-        },
-        "228000433": {  // 1560B
-            referenceStationId: "228000723",  // 경희대정문(사색행)
-            timeOffset: 1,
-            staOrderOffset: 1  
-        }
-    },
-    "228000709": {  // 생명과학대(사색행)
-        "234001243": {  // M5107
-            referenceStationId: "228000723",  // 경희대정문(사색행)
-            timeOffset: 2,// 도착 예정 시간에 더할 시간(분)
-            staOrderOffset: 2  //정류장 순서에 더할 값
-        },
-        "234000884": {  // 1560A
-            referenceStationId: "228000723",  // 경희대정문(사색행)
-            timeOffset: 2,
-            staOrderOffset: 2 
-        },
-        "228000433": {  // 1560B
-            referenceStationId: "228000723",  // 경희대정문(사색행)
-            timeOffset: 2,
-            staOrderOffset: 2 
-        }
-    },
-    "228000708": {  // 사색의광장(사색행)
-        "234001243": {  // M5107
-            referenceStationId: "228000723",  // 경희대정문(사색행)
-            timeOffset: 3,
-            staOrderOffset: 3  
-        },
-        "234000884": {  // 1560A
-            referenceStationId: "228000723",  // 경희대정문(사색행)
-            timeOffset: 3,
-            staOrderOffset: 3  
-        },
-        "228000433": {  // 1560B
-            referenceStationId: "228000723",  // 경희대정문(사색행)
-            timeOffset: 3,
-            staOrderOffset: 3  
-        }
-
-    }
-};
-
-const specialRouteMappingFullPath = {
-    "228000710": {  // 외국어대학(사색행)
-        "234001243": {  // M5107
-            referenceStationId: "228000723",  // 경희대정문(사색행)
-            timeOffset: 1,
-            staOrderOffset: 1  
-        },
-        "234000884": {  // 1560A
-            referenceStationId: "228000723",  // 경희대정문(사색행)
-            timeOffset: 1,
-            staOrderOffset: 1  
-        },
-        "228000433": {  // 1560B
-            referenceStationId: "228000723",  // 경희대정문(사색행)
-            timeOffset: 1,
-            staOrderOffset: 1  
-        }
-    },
-    "228000709": {  // 생명과학대(사색행)
-        "234001243": {  // M5107
-            referenceStationId: "228000723",  // 경희대정문(사색행)
-            timeOffset: 2,// 도착 예정 시간에 더할 시간(분)
-            staOrderOffset: 2  //정류장 순서에 더할 값
-        },
-        "234000884": {  // 1560A
-            referenceStationId: "228000723",  // 경희대정문(사색행)
-            timeOffset: 2,
-            staOrderOffset: 2 
-        },
-        "228000433": {  // 1560B
-            referenceStationId: "228000723",  // 경희대정문(사색행)
-            timeOffset: 2,
-            staOrderOffset: 2 
-        }
-    },
-    
-    "228000708": {  // 사색의광장(사색행)
-        "234001243": {  // M5107
-            referenceStationId: "228000723",  // 경희대정문(사색행)
-            timeOffset: 3,
-            staOrderOffset: 3  
-        },
-        "234000884": {  // 1560A
-            referenceStationId: "228000723",  // 경희대정문(사색행)
-            timeOffset: 3,
-            staOrderOffset: 3  
-        },
-        "228000433": {  // 1560B
-            referenceStationId: "228000723",  // 경희대정문(사색행)
-            timeOffset: 3,
-            staOrderOffset: 3  
-        }
-
-    },
-    "228001174": {  // 사색의광장(정문행)
-        "234001243": {  // M5107
-            referenceStationId: "203000125",  // 경희대학교(정문행)
-            timeOffset: -3,
-            staOrderOffset: -3  
-        },
-        "234000884": {  // 1560A
-            referenceStationId: "203000125",  // 경희대학교(정문행)
-            timeOffset: -3,
-            staOrderOffset: -3  
-        },
-        "228000433": {  // 1560B
-            referenceStationId: "203000125",  // 경희대학교(정문행)
-            timeOffset: -3,
-            staOrderOffset: -3  
-        }
-    },
-    "228000704": {  // 생명과학대.산업대학(정문행)
-        "234001243": {  // M5107
-            referenceStationId: "203000125",  // 경희대학교(정문행)
-            timeOffset: -2,
-            staOrderOffset: -2  
-        },
-        "234000884": {  // 1560A
-            referenceStationId: "203000125",  // 경희대학교(정문행)
-            timeOffset: -2,
-            staOrderOffset: -2  
-        },
-        "228000433": {  // 1560B
-            referenceStationId: "203000125",  // 경희대학교(정문행)
-            timeOffset: -2,
-            staOrderOffset: -2  
-        }
-    },
-    "228000703": {  // 경희대체육대학.외대(정문행)
-        "234001243": {  // M5107
-            referenceStationId: "203000125",  // 경희대학교(정문행)
-            timeOffset: -1,
-            staOrderOffset: -1  
-        },
-        "234000884": {  // 1560A
-            referenceStationId: "203000125",  // 경희대학교(정문행)
-            timeOffset: -1,
-            staOrderOffset: -1  
-        },
-        "228000433": {  // 1560B
-            referenceStationId: "203000125",  // 경희대학교(정문행)
-            timeOffset: -1,
-            staOrderOffset: -1  
-        }
-    }
-};
-const stationRouteOrder = {
-    "228001174":{//사색의광장(정문행)
-        "200000103": "1",//9번 
-        "200000115": "1",//5100
-        "200000112": "1",//7000
-        "234001243": "1",//M5107
-        "234000884": "1",//1560A
-        "234000016": "1",//1112
-        "228000433": "1",//1560B
-    },
-    "228000704":{//생명과학대.산업대학(정문행)
-        "200000103": "2",//9번 
-        "200000115": "2",//5100
-        "200000112": "2",//7000
-        "234001243": "2",//M5107
-        "234000884": "2",//1560A
-        "234000016": "2",//1112
-        "228000433": "2",//1560B
-    },
-    "228000703":{//경희대체육대학.외대(정문행)
-        "200000103": "3",//9번 
-        "200000115": "3",//5100
-        "200000112": "3",//7000
-        "234001243": "3",//M5107
-        "234000884": "3",//1560A
-        "234000016": "3",//1112
-        "228000433": "3",//1560B
-    },
-    "203000125":{//경희대학교(정문행)
-        "200000103": "4",//9번 
-        "200000115": "4",//5100
-        "200000112": "4",//7000
-        "234001243": "4",//M5107
-        "234000884": "4",//1560A
-        "234000016": "4",//1112
-        "228000433": "4",//1560B
-    },
-    "228000723":{//경희대정문(사색행)
-        "200000103": "87",//9번 
-        "200000115": "56",//5100
-        "200000112": "76",//7000
-        "234001243": "60",//M5107
-        "234000884": "99",//1560A
-        "234000016": "68",//1112
-        "228000433": "99",//1560B
-    },
-    "228000710":{//외국어대학(사색행)
-        "200000103": "88",//9번 
-        "200000115": "57",//5100
-        "200000112": "77",//7000
-        "234001243": "61",//M5107
-        "234000884": "100",//1560A
-        "234000016": "69",//1112
-        "228000433": "100",//1560B
-    },
-    "228000709":{//생명과학대(사색행)
-        "200000103": "89",//9번 
-        "200000115": "58",//5100
-        "200000112": "78",//7000
-        "234001243": "62",//M5107
-        "234000884": "101",//1560A
-        "234000016": "70",//1112
-        "228000433": "101",//1560B
-    },
-    "228000708":{//사색의광장(사색행)
-        "200000103": "90",//9번 
-        "200000115": "59",//5100
-        "200000112": "79",//7000
-        "234001243": "63",//M5107
-        "234000884": "102",//1560A
-        "234000016": "71",//1112
-        "228000433": "102",//1560B
-    }
-};
+const busRouteMap = require('./busRoute');
+const stationMap = require('./station');
+const { specialRouteMapping: specialRouteMapping, specialRouteMappingFullPath: specialRouteMappingFullPath } = require('./specialRoute');
+const stationRouteOrder = require('./stationRouteOrder');
 const busStationData = JSON.parse(
     fs.readFileSync(path.join(__dirname, '버스정류소현황.json'), 'utf8')
 );
@@ -317,12 +47,6 @@ const setSession2 = function(id, cookie) {
 const getSession = function(id) {
     return session.find(user => user.id == id)['Cookie'];
 }
-const getSession2 = function(id) {
-    return session.find(user => user.id == id)['Cookie2'];
-}
-const getSession3= function(id) {
-    return session.find(user => user.id == id)['reserveReserve'];
-}
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
 
@@ -336,7 +60,6 @@ function getpublickey(callback) {
         callback(data, cookie)
     })
 }
-
 
 
 function login(id, pw, callback, ecallback) {
@@ -822,48 +545,7 @@ function getStoredPredictionsByStation(stationId) {
     }
     return predictions;
 }
-//past history
-/*function getPastBusArrival(routeId, stationId, staOrder, date) {
-    return new Promise((resolve, reject) => {
-        const url = 'https://api.gbis.go.kr/ws/rest/pastarrivalservice/json';
-        const queryParams = new URLSearchParams({
-            serviceKey: gbIsApiKey,  // .env 파일에 GBIS API 키 추가 필요
-            sDay: date,                            // YYYY-MM-DD 형식
-            routeId: routeId,
-            stationId: stationId,
-            staOrder: staOrder
-        }).toString();
 
-        request({
-            url: `${url}?${queryParams}`,
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'User-Agent': 'Mozilla/5.0',
-                'Origin': 'https://m.gbis.go.kr',
-                'Referer': 'https://m.gbis.go.kr/'
-            }
-        }, function(error, response, body) {
-            if (error) {
-                console.error('과거 버스 도착 정보 조회 실패:', error);
-                reject(error);
-                return;
-            }
-
-            try {
-                const data = JSON.parse(body);
-                resolve({
-                    ok: true,
-                    data: data,
-                    lastUpdate: new Date()
-                });
-            } catch (e) {
-                console.error('데이터 처리 오류:', e);
-                reject(e);
-            }
-        });
-    });
-}*/
 function getStaOrder(stationId, routeId) {
     return stationRouteOrder[stationId]?.[routeId];
 }
@@ -1029,5 +711,5 @@ async function fetchBusHistory(routeId, stationId, staOrder, date) {
 
 
 module.exports = {
-    login,getMID, setSession, getSession, setSession2, getSession2, getUserInfo, getSession3, mybusinfo, getUserSession, getBusArrival, getStoredPredictions, startMonitoring, stopMonitoring, getStoredPredictionsByStation, getPastBusArrival, getStaOrder, stationRouteOrder,busRouteMap,stationMap,logout
+    login,getMID, setSession, getSession, setSession2, getUserInfo,mybusinfo, getUserSession, getBusArrival, getStoredPredictions, startMonitoring, stopMonitoring, getStoredPredictionsByStation, getPastBusArrival, getStaOrder, stationRouteOrder,busRouteMap,stationMap,logout
 };
