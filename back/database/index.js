@@ -47,12 +47,6 @@ const setSession2 = function(id, cookie) {
 const getSession = function(id) {
     return session.find(user => user.id == id)['Cookie'];
 }
-const getSession2 = function(id) {
-    return session.find(user => user.id == id)['Cookie2'];
-}
-const getSession3= function(id) {
-    return session.find(user => user.id == id)['reserveReserve'];
-}
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
 
@@ -66,7 +60,6 @@ function getpublickey(callback) {
         callback(data, cookie)
     })
 }
-
 
 
 function login(id, pw, callback, ecallback) {
@@ -718,5 +711,5 @@ async function fetchBusHistory(routeId, stationId, staOrder, date) {
 
 
 module.exports = {
-    login,getMID, setSession, getSession, setSession2, getSession2, getUserInfo, getSession3, mybusinfo, getUserSession, getBusArrival, getStoredPredictions, startMonitoring, stopMonitoring, getStoredPredictionsByStation, getPastBusArrival, getStaOrder, stationRouteOrder,busRouteMap,stationMap,logout
+    login,getMID, setSession, getSession, setSession2, getUserInfo,mybusinfo, getUserSession, getBusArrival, getStoredPredictions, startMonitoring, stopMonitoring, getStoredPredictionsByStation, getPastBusArrival, getStaOrder, stationRouteOrder,busRouteMap,stationMap,logout
 };
